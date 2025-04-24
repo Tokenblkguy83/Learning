@@ -23,7 +23,6 @@ jobs:
           java-package: jdk
           architecture: x64
           check-latest: true
-          cache: maven
 
       - name: Build with Gradle
         run: ./gradlew build
