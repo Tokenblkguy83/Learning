@@ -23,16 +23,7 @@ jobs:
           java-package: jdk
           architecture: x64
           check-latest: true
-          server-id: github
-          server-username: GITHUB_ACTOR
-          server-password: GITHUB_TOKEN
-          settings-path: ~/.m2
-          overwrite-settings: true
-          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
-          gpg-passphrase: ${{ secrets.GPG_PASSPHRASE }}
           cache: maven
-          job-status: ${{ job.status }}
-          token: ${{ github.server_url == 'https://github.com' && github.token || '' }}
 
       - name: Build with Gradle
         run: ./gradlew build
