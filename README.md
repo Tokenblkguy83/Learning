@@ -44,3 +44,10 @@ This repository includes basic adb functionality provided by the `ADBBase` class
 - `extractFiles(String sourcePath, String destinationPath)`: Extracts files from the device using ADB commands.
 - `traceIPAddress()`: Traces the IP address of the device using ADB commands.
 - `enableStealthMode()`: Enables stealth mode by disabling notifications and hiding the ADB connection from the user.
+
+## Known Issues and Required Fixes
+
+- The `error` method in `Src/Utils/Logger.java` has a syntax error, missing a `+` operator in the log message concatenation.
+- The `.github/workflow/jdk.yml` file has several optional fields that are not set, which may cause issues during the setup of the Java JDK.
+- The `Tests/ADB_test/ADBBase_test.java` file does not include tests for all methods, such as `extractData`.
+- The `.gitignore` file is empty and may need to include common patterns to ignore unnecessary files.
