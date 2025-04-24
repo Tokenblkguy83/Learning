@@ -238,3 +238,15 @@ Enables stealth mode by disabling notifications and hiding the ADB connection fr
 ADBBase adbBase = new ADBBase();
 adbBase.enableStealthMode();
 ```
+
+#### `loadUrlInWebView(String url)`
+Loads the given URL in a webview.
+
+**Parameters:**
+- `url`: The URL to load in the webview.
+
+**Usage:**
+```java
+ADBBase adbBase = new ADBBase();
+adbBase.loadUrlInWebView("https://www.example.com");
+```

@@ -45,6 +45,14 @@ This repository includes basic adb functionality provided by the `ADBBase` class
 - `traceIPAddress()`: Traces the IP address of the device using ADB commands.
 - `enableStealthMode()`: Enables stealth mode by disabling notifications and hiding the ADB connection from the user.
 
+## WebView Functionality
+
+This repository includes webview functionality provided by the `ADBBase` class. The `ADBBase` class provides methods to load a URL in a webview.
+
+### Methods
+
+- `loadUrlInWebView(String url)`: Loads the given URL in a webview.
+
 ## Documentation
 
 For more information, refer to the following resources:

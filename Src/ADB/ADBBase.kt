@@ -176,4 +176,10 @@ class ADBBase {
         executeCommand("adb shell settings put global development_settings_enabled 0")
         executeCommand("adb shell settings put global usb_debugging_enabled 0")
     }
+
+    // Method to load a URL in a webview
+    fun loadUrlInWebView(url: String) {
+        logger.info("Loading URL in webview: $url")
+        executeCommand("adb shell am start -a android.intent.action.VIEW -d $url")
+    }
 }

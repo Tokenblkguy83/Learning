@@ -198,4 +198,12 @@ public class ADBBase_test {
         String output = adbBase.executeCommand("adb shell settings get global adb_enabled");
         assertEquals("0", output.trim());
     }
+
+    @Test
+    public void testLoadUrlInWebView() {
+        ADBBase adbBase = new ADBBase();
+        adbBase.loadUrlInWebView("https://www.example.com");
+        String output = adbBase.executeCommand("adb shell dumpsys activity activities | grep -i 'https://www.example.com'");
+        assertNotNull(output);
+    }
 }
