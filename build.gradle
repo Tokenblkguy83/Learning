@@ -13,7 +13,7 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib:2.1.20" // Aligned Kotlin version
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.12.2'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.12.2'
-    testImplementation 'org.mockito.kotlin:mockito-kotlin:4.1.0' // Added Mockito Kotlin
+    testImplementation 'org.mockito.kotlin:mockito-kotlin:5.4.0' // Added Mockito Kotlin
     testImplementation 'org.mockito:mockito-junit-jupiter:5.17.0' // Added Mockito JUnit Jupiter extension
 }
 
