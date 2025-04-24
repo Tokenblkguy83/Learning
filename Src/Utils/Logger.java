@@ -1,35 +1,39 @@
-package Src.Utils;
+package Src.Utils
 
-import java.io.FileWriter;
-import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.io.FileWriter
+import java.io.IOException
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
-public class Logger {
+class Logger {
 
-    private static final String LOG_FILE = "app.log";
-    private static final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
-
-    public void info(String message) {
-        log("INFO", message);
+    companion object {
+        private const val LOG_FILE = "app.log"
+        private val dtf: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss")
     }
 
-    public void warning(String message) {
-        log("WARNING", message);
+    fun info(message: String) {
+        log("INFO", message)
     }
 
-    public void error(String message, Exception e) {
-        log("ERROR", message + " - " e.getMessage());
+    fun warning(message: String) {
+        log("WARNING", message)
     }
 
-    private void log(String level, String message) {
-        String timestamp = dtf.format(LocalDateTime.now());
-        String logMessage = String.format("%s [%s]: %s", timestamp, level, message);
-        System.out.println(logMessage);
-        try (FileWriter writer = new FileWriter(LOG_FILE, true)) {
-            writer.write(logMessage + "\n");
-        } catch (IOException e) {
-            e.printStackTrace();
+    fun error(message: String, e: Exception) {
+        log("ERROR", "$message - ${e.message}")
+    }
+
+    private fun log(level: String, message: String) {
+        val timestamp = dtf.format(LocalDateTime.now())
+        val logMessage = "$timestamp [$level]: $message"
+        println(logMessage)
+        try {
+            FileWriter(LOG_FILE, true).use { writer ->
+                writer.write("$logMessage\n")
+            }
+        } catch (e: IOException) {
+            e.printStackTrace()
         }
     }
 }
