@@ -45,6 +45,13 @@ This repository includes basic adb functionality provided by the `ADBBase` class
 - `traceIPAddress()`: Traces the IP address of the device using ADB commands.
 - `enableStealthMode()`: Enables stealth mode by disabling notifications and hiding the ADB connection from the user.
 
+## Documentation
+
+For more information, refer to the following resources:
+
+- [API Reference](Docs/Api-Reference.md)
+- [Setup Guide](Docs/Setup-guide.md)
+
 ## Known Issues and Required Fixes
 
 - The `error` method in `Src/Utils/Logger.java` has a syntax error, missing a `+` operator in the log message concatenation.
