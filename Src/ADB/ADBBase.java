@@ -1,12 +1,22 @@
 package Src.ADB;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import Src.Utils.Logger;
 
 public class ADBBase {
 
     private Logger logger = new Logger();
+
+    public static class ADBExecutionException extends RuntimeException {
+        public ADBExecutionException(String message, Throwable cause) {
+            super(message, cause);
+        }
+        public ADBExecutionException(String message) {
+            super(message);
+        }
+    }
 
     // Method to start adb server
     public void startADBServer() {
@@ -32,9 +42,26 @@ public class ADBBase {
                 output.append(line).append("\n");
             }
             reader.close();
-        } catch (Exception e) {
+            int exitCode = process.waitFor();
+            if (exitCode != 0) {
+                // Optionally read the error stream for more details
+                BufferedReader errorReader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+                StringBuilder errorOutput = new StringBuilder();
+                String errorLine;
+                while ((errorLine = errorReader.readLine()) != null) {
+                    errorOutput.append(errorLine).append("\n");
+                }
+                errorReader.close();
+                logger.error("ADB command failed (exit code " + exitCode + "): " + command + "\nError output:\n" + errorOutput.toString());
+                throw new ADBExecutionException("ADB command failed (exit code " + exitCode + "): " + command + "\nError output:\n" + errorOutput.toString());
+            }
+        } catch (IOException e) {
             logger.error("Error executing ADB command: " + command, e);
-            throw new RuntimeException("Error executing ADB command: " + command, e);
+            throw new ADBExecutionException("Error executing ADB command: " + command, e);
+        } catch (InterruptedException e) {
+            logger.error("ADB command execution interrupted: " + command, e);
+            Thread.currentThread().interrupt(); // Re-interrupt the current thread
+            throw new ADBExecutionException("ADB command execution interrupted: " + command, e);
         }
         return output.toString();
     }
@@ -80,57 +107,77 @@ public class ADBBase {
     }
 
     // Method to test the lifecycle methods of an Android activity
-    public void testActivityLifecycle() {
-        logger.info("Testing activity lifecycle");
-        executeCommand("adb shell am start -n com.example/.MainActivity");
-        executeCommand("adb shell am force-stop com.example");
+    public void testActivityLifecycle(String packageName, String activityName) {
+        logger.info("Testing activity lifecycle for " + packageName + "/" + activityName);
+        executeCommand("adb shell am start -n " + packageName + "/" + activityName);
+        executeCommand("adb shell am force-stop " + packageName);
     }
 
     // Method to test the interaction between activities
-    public void testActivityInteraction() {
-        logger.info("Testing activity interaction");
-        executeCommand("adb shell am start -n com.example/.MainActivity");
-        executeCommand("adb shell am start -n com.example/.SecondActivity");
-        executeCommand("adb shell am force-stop com.example");
+    public void testActivityInteraction(String packageName, String firstActivityName, String secondActivityName) {
+        logger.info("Testing activity interaction between " + packageName + "/" + firstActivityName + " and " + packageName + "/" + secondActivityName);
+        executeCommand("adb shell am start -n " + packageName + "/" + firstActivityName);
+        executeCommand("adb shell am start -n " + packageName + "/" + secondActivityName);
+        executeCommand("adb shell am force-stop " + packageName);
     }
 
     // Method to test the UI elements of an activity
-    public void testActivityUIElements() {
-        logger.info("Testing activity UI elements");
-        executeCommand("adb shell am start -n com.example/.MainActivity");
-        executeCommand("adb shell input tap 100 200");
-        executeCommand("adb shell input text 'Hello'");
-        executeCommand("adb shell am force-stop com.example");
+    public void testActivityUIElements(String packageName, String activityName, int x, int y, String text) {
+        logger.info("Testing UI elements of " + packageName + "/" + activityName);
+        executeCommand("adb shell am start -n " + packageName + "/" + activityName);
+        executeCommand("adb shell input tap " + x + " " + y);
+        if (text != null && !text.isEmpty()) {
+            executeCommand("adb shell input text '" + text + "'");
+        }
+        executeCommand("adb shell am force-stop " + packageName);
     }
 
     // Method to test the lifecycle methods of an Android service
-    public void testServiceLifecycle() {
-        logger.info("Testing service lifecycle");
-        executeCommand("adb shell am startservice -n com.example/.MyService");
-        executeCommand("adb shell am stopservice -n com.example/.MyService");
+    public void testServiceLifecycle(String packageName, String serviceName) {
+        logger.info("Testing service lifecycle for " + packageName + "/" + serviceName);
+        executeCommand("adb shell am startservice -n " + packageName + "/" + serviceName);
+        executeCommand("adb shell am stopservice -n " + packageName + "/" + serviceName);
     }
 
     // Method to test the interaction between services and other components
-    public void testServiceInteraction() {
-        logger.info("Testing service interaction");
-        executeCommand("adb shell am startservice -n com.example/.MyService");
-        executeCommand("adb shell am broadcast -a com.example.SERVICE_ACTION");
-        executeCommand("adb shell am stopservice -n com.example/.MyService");
+    public void testServiceInteraction(String packageName, String serviceName, String broadcastAction) {
+        logger.info("Testing service interaction for " + packageName + "/" + serviceName + " with broadcast " + broadcastAction);
+        executeCommand("adb shell am startservice -n " + packageName + "/" + serviceName);
+        executeCommand("adb shell am broadcast -a " + broadcastAction);
+        executeCommand("adb shell am stopservice -n " + packageName + "/" + serviceName);
     }
 
     // Method to test the background processing capabilities of a service
-    public void testServiceBackgroundProcessing() {
-        logger.info("Testing service background processing");
-        executeCommand("adb shell am startservice -n com.example/.MyService");
-        executeCommand("adb shell am force-stop com.example");
+    public void testServiceBackgroundProcessing(String packageName, String serviceName) {
+        logger.info("Testing background processing of " + packageName + "/" + serviceName);
+        executeCommand("adb shell am startservice -n " + packageName + "/" + serviceName);
+        executeCommand("adb shell am force-stop " + packageName);
     }
 
     // Method to enable full wireless control of the device
     public void enableWirelessControl() {
         logger.info("Enabling wireless control of the device");
         executeCommand("adb tcpip 5555");
-        String ipAddress = executeCommand("adb shell ip -f inet addr show wlan0");
-        executeCommand("adb connect " + ipAddress.trim() + ":5555");
+        String ipAddressOutput = executeCommand("adb shell ip -f inet addr show wlan0");
+        // Simple parsing to extract the IP address
+        String ipAddress = null;
+        String[] lines = ipAddressOutput.split("\n");
+        for (String line : lines) {
+            if (line.contains("inet ") && !line.contains("127.0.0.1")) {
+                int start = line.indexOf("inet ") + 5;
+                int end = line.indexOf("/", start);
+                if (end > start) {
+                    ipAddress = line.substring(start, end).trim();
+                    break;
+                }
+            }
+        }
+        if (ipAddress != null) {
+            executeCommand("adb connect " + ipAddress + ":5555");
+            logger.info("Attempting to connect to: " + ipAddress + ":5555");
+        } else {
+            logger.warning("Could not parse IP address from ADB output.");
+        }
     }
 
     // Method to extract data from the device using ADB commands
