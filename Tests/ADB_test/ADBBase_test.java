@@ -1,201 +1,273 @@
 package Tests.ADB_test;
 
 import Src.ADB.ADBBase;
+import Src.ADB.ADBBase.ADBExecutionException;
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
 public class ADBBase_test {
 
+    @Mock
+    private Runtime runtime;
+    @Mock
+    private Process process;
+    @Mock
+    private BufferedReader inputStreamReader;
+    @Mock
+    private BufferedReader errorStreamReader;
+
+    @InjectMocks
+    private ADBBase adbBase;
+
+    private void mockSuccessfulCommand(String command, String output) throws IOException {
+        when(runtime.exec(command)).thenReturn(process);
+        when(process.getInputStream()).thenReturn(new ByteArrayInputStream(output.getBytes()));
+        when(process.getErrorStream()).thenReturn(new ByteArrayInputStream("".getBytes()));
+        when(process.waitFor()).thenReturn(0);
+    }
+
+    private void mockFailedCommand(String command, String errorOutput, int exitCode) throws IOException {
+        when(runtime.exec(command)).thenReturn(process);
+        when(process.getInputStream()).thenReturn(new ByteArrayInputStream("".getBytes()));
+        when(process.getErrorStream()).thenReturn(new ByteArrayInputStream(errorOutput.getBytes()));
+        when(process.waitFor()).thenReturn(exitCode);
+    }
+
     @Test
-    public void testStartADBServer() {
-        ADBBase adbBase = new ADBBase();
+    public void testStartADBServer_success() throws IOException {
+        mockSuccessfulCommand("adb start-server", "ADB server started successfully");
         adbBase.startADBServer();
-        String output = adbBase.executeCommand("adb get-state");
-        assertTrue(output.contains("device"));
+        // Verify that the command was executed
+        verify(runtime).exec("adb start-server");
     }
 
     @Test
-    public void testStopADBServer() {
-        ADBBase adbBase = new ADBBase();
+    public void testStopADBServer_success() throws IOException {
+        mockSuccessfulCommand("adb kill-server", "ADB server killed");
         adbBase.stopADBServer();
-        String output = adbBase.executeCommand("adb get-state");
-        assertTrue(output.contains("error: no devices/emulators found"));
+        verify(runtime).exec("adb kill-server");
     }
 
     @Test
-    public void testExecuteCommand() {
-        ADBBase adbBase = new ADBBase();
+    public void testExecuteCommand_success() throws IOException {
+        String expectedOutput = "List of devices attached\nemulator-5554\tdevice\n";
+        mockSuccessfulCommand("adb devices", expectedOutput);
         String output = adbBase.executeCommand("adb devices");
-        assertNotNull(output);
+        assertEquals(expectedOutput, output);
     }
 
     @Test
-    public void testRunADBServerWithoutPC() {
-        ADBBase adbBase = new ADBBase();
+    public void testExecuteCommand_failure() throws IOException {
+        String errorOutput = "error: device not found\n";
+        mockFailedCommand("adb bad-command", errorOutput, 1);
+        ADBExecutionException exception = assertThrows(ADBExecutionException.class, () -> adbBase.executeCommand("adb bad-command"));
+        assertTrue(exception.getMessage().contains("ADB command failed"));
+        assertTrue(exception.getMessage().contains("error: device not found"));
+    }
+
+    @Test
+    public void testRunADBServerWithoutPC_success() throws IOException {
+        mockSuccessfulCommand("adb tcpip 5555", "restarting adbd tcpip on port 5555");
         adbBase.runADBServerWithoutPC();
-        String output = adbBase.executeCommand("adb devices");
-        assertNotNull(output);
+        verify(runtime).exec("adb tcpip 5555");
     }
 
     @Test
-    public void testHackDevice() {
-        ADBBase adbBase = new ADBBase();
-        adbBase.hackDevice();
-        String output = adbBase.executeCommand("adb shell ls /data");
-        assertNotNull(output);
+    public void testHackDevice_success() throws IOException {
+        String expectedOutput = "data/app\ndata/misc\ndata/system\n";
+        mockSuccessfulCommand("adb shell ls /data", expectedOutput);
+        String output = adbBase.hackDevice();
+        assertEquals(expectedOutput, adbBase.executeCommand("adb shell ls /data"));
     }
 
     @Test
-    public void testDefendAgainstHack() {
-        ADBBase adbBase = new ADBBase();
+    public void testDefendAgainstHack_noUnauthorized() throws IOException {
+        mockSuccessfulCommand("adb shell ls /data", "data/app\ndata/misc\n");
         adbBase.defendAgainstHack();
-        String output = adbBase.executeCommand("adb get-state");
-        assertTrue(output.contains("error: no devices/emulators found"));
+        // Verify that stopADBServer was NOT called
+        verify(runtime, never()).exec("adb kill-server");
     }
 
     @Test
-    public void testLogging() {
-        ADBBase adbBase = new ADBBase();
-        adbBase.startADBServer();
-        adbBase.stopADBServer();
-        adbBase.executeCommand("adb devices");
-        adbBase.runADBServerWithoutPC();
-        adbBase.hackDevice();
+    public void testDefendAgainstHack_unauthorizedDetected() throws IOException {
+        mockSuccessfulCommand("adb shell ls /data", "data/app\nunauthorized\ndata/misc\n");
+        mockSuccessfulCommand("adb kill-server", "ADB server killed");
         adbBase.defendAgainstHack();
+        // Verify that stopADBServer WAS called
+        verify(runtime).exec("adb kill-server");
     }
 
     @Test
-    public void testBroadcastReceiverLifecycle() {
-        ADBBase adbBase = new ADBBase();
+    public void testBroadcastReceiverLifecycle_success() throws IOException {
+        String expectedOutput = "Sending broadcast intent...\nBroadcast completed: result=0\n";
+        mockSuccessfulCommand("adb shell am broadcast -a android.intent.action.BOOT_COMPLETED", expectedOutput);
         adbBase.testBroadcastReceiverLifecycle();
-        String output = adbBase.executeCommand("adb shell am broadcast -a android.intent.action.BOOT_COMPLETED");
-        assertNotNull(output);
+        verify(runtime).exec("adb shell am broadcast -a android.intent.action.BOOT_COMPLETED");
     }
 
     @Test
-    public void testBroadcastReceiverInteraction() {
-        ADBBase adbBase = new ADBBase();
+    public void testBroadcastReceiverInteraction_success() throws IOException {
+        String expectedOutput = "Sending broadcast intent...\nBroadcast completed: result=0\n";
+        mockSuccessfulCommand("adb shell am broadcast -a android.intent.action.SCREEN_ON", expectedOutput);
         adbBase.testBroadcastReceiverInteraction();
-        String output = adbBase.executeCommand("adb shell am broadcast -a android.intent.action.SCREEN_ON");
-        assertNotNull(output);
+        verify(runtime).exec("adb shell am broadcast -a android.intent.action.SCREEN_ON");
     }
 
     @Test
-    public void testBroadcastReceiverHandling() {
-        ADBBase adbBase = new ADBBase();
+    public void testBroadcastReceiverHandling_success() throws IOException {
+        String expectedOutput = "Sending broadcast intent...\nBroadcast completed: result=0\n";
+        mockSuccessfulCommand("adb shell am broadcast -a com.example.CUSTOM_BROADCAST", expectedOutput);
         adbBase.testBroadcastReceiverHandling();
-        String output = adbBase.executeCommand("adb shell am broadcast -a com.example.CUSTOM_BROADCAST");
-        assertNotNull(output);
+        verify(runtime).exec("adb shell am broadcast -a com.example.CUSTOM_BROADCAST");
     }
 
     @Test
-    public void testActivityLifecycle() {
-        ADBBase adbBase = new ADBBase();
+    public void testActivityLifecycle_success() throws IOException {
+        mockSuccessfulCommand("adb shell am start -n com.example/.MainActivity", "Starting: Intent { cmp=com.example/.MainActivity }");
+        mockSuccessfulCommand("adb shell am force-stop com.example", "Stopping: com.example");
         adbBase.testActivityLifecycle();
-        String output = adbBase.executeCommand("adb shell am start -n com.example/.MainActivity");
-        assertNotNull(output);
+        verify(runtime).exec("adb shell am start -n com.example/.MainActivity");
+        verify(runtime).exec("adb shell am force-stop com.example");
     }
 
     @Test
-    public void testActivityInteraction() {
-        ADBBase adbBase = new ADBBase();
+    public void testActivityInteraction_success() throws IOException {
+        mockSuccessfulCommand("adb shell am start -n com.example/.MainActivity", "Starting: Intent { cmp=com.example/.MainActivity }");
+        mockSuccessfulCommand("adb shell am start -n com.example/.SecondActivity", "Starting: Intent { cmp=com.example/.SecondActivity }");
+        mockSuccessfulCommand("adb shell am force-stop com.example", "Stopping: com.example");
         adbBase.testActivityInteraction();
-        String output = adbBase.executeCommand("adb shell am start -n com.example/.MainActivity");
-        assertNotNull(output);
+        verify(runtime).exec("adb shell am start -n com.example/.MainActivity");
+        verify(runtime).exec("adb shell am start -n com.example/.SecondActivity");
+        verify(runtime).exec("adb shell am force-stop com.example");
     }
 
     @Test
-    public void testActivityUIElements() {
-        ADBBase adbBase = new ADBBase();
+    public void testActivityUIElements_success() throws IOException {
+        mockSuccessfulCommand("adb shell am start -n com.example/.MainActivity", "Starting: Intent { cmp=com.example/.MainActivity }");
+        mockSuccessfulCommand("adb shell input tap 100 200", "");
+        mockSuccessfulCommand("adb shell input text 'Hello'", "");
+        mockSuccessfulCommand("adb shell am force-stop com.example", "Stopping: com.example");
         adbBase.testActivityUIElements();
-        String output = adbBase.executeCommand("adb shell am start -n com.example/.MainActivity");
-        assertNotNull(output);
+        verify(runtime).exec("adb shell am start -n com.example/.MainActivity");
+        verify(runtime).exec("adb shell input tap 100 200");
+        verify(runtime).exec("adb shell input text 'Hello'");
+        verify(runtime).exec("adb shell am force-stop com.example");
     }
 
     @Test
-    public void testServiceLifecycle() {
-        ADBBase adbBase = new ADBBase();
+    public void testServiceLifecycle_success() throws IOException {
+        mockSuccessfulCommand("adb shell am startservice -n com.example/.MyService", "Starting service: Intent { cmp=com.example/.MyService }");
+        mockSuccessfulCommand("adb shell am stopservice -n com.example/.MyService", "Stopping service: Intent { cmp=com.example/.MyService }");
         adbBase.testServiceLifecycle();
-        String output = adbBase.executeCommand("adb shell am startservice -n com.example/.MyService");
-        assertNotNull(output);
+        verify(runtime).exec("adb shell am startservice -n com.example/.MyService");
+        verify(runtime).exec("adb shell am stopservice -n com.example/.MyService");
     }
 
     @Test
-    public void testServiceInteraction() {
-        ADBBase adbBase = new ADBBase();
+    public void testServiceInteraction_success() throws IOException {
+        mockSuccessfulCommand("adb shell am startservice -n com.example/.MyService", "Starting service: Intent { cmp=com.example/.MyService }");
+        mockSuccessfulCommand("adb shell am broadcast -a com.example.SERVICE_ACTION", "Sending broadcast intent...");
+        mockSuccessfulCommand("adb shell am stopservice -n com.example/.MyService", "Stopping service: Intent { cmp=com.example/.MyService }");
         adbBase.testServiceInteraction();
-        String output = adbBase.executeCommand("adb shell am startservice -n com.example/.MyService");
-        assertNotNull(output);
+        verify(runtime).exec("adb shell am startservice -n com.example/.MyService");
+        verify(runtime).exec("adb shell am broadcast -a com.example.SERVICE_ACTION");
+        verify(runtime).exec("adb shell am stopservice -n com.example/.MyService");
     }
 
     @Test
-    public void testServiceBackgroundProcessing() {
-        ADBBase adbBase = new ADBBase();
+    public void testServiceBackgroundProcessing_success() throws IOException {
+        mockSuccessfulCommand("adb shell am startservice -n com.example/.MyService", "Starting service: Intent { cmp=com.example/.MyService }");
+        mockSuccessfulCommand("adb shell am force-stop com.example", "Stopping: com.example");
         adbBase.testServiceBackgroundProcessing();
-        String output = adbBase.executeCommand("adb shell am startservice -n com.example/.MyService");
-        assertNotNull(output);
+        verify(runtime).exec("adb shell am startservice -n com.example/.MyService");
+        verify(runtime).exec("adb shell am force-stop com.example");
     }
 
     @Test
-    public void testEnableWirelessControl() {
-        ADBBase adbBase = new ADBBase();
+    public void testEnableWirelessControl_success() throws IOException {
+        mockSuccessfulCommand("adb tcpip 5555", "restarting adbd tcpip on port 5555");
+        mockSuccessfulCommand("adb shell ip -f inet addr show wlan0", "inet 192.168.1.100/24 brd 192.168.1.255 scope global wlan0");
+        mockSuccessfulCommand("adb connect 192.168.1.100:5555", "connected to 192.168.1.100:5555");
         adbBase.enableWirelessControl();
-        String output = adbBase.executeCommand("adb devices");
-        assertNotNull(output);
+        verify(runtime).exec("adb tcpip 5555");
+        verify(runtime).exec("adb shell ip -f inet addr show wlan0");
+        verify(runtime).exec("adb connect 192.168.1.100:5555");
     }
 
     @Test
-    public void testExtractData() {
-        ADBBase adbBase = new ADBBase();
-        adbBase.extractData("/data/data/com.example/files", "/local/path");
-        String output = adbBase.executeCommand("ls /local/path");
-        assertNotNull(output);
+    public void testEnableWirelessControl_noIPFound() throws IOException {
+        mockSuccessfulCommand("adb tcpip 5555", "restarting adbd tcpip on port 5555");
+        mockSuccessfulCommand("adb shell ip -f inet addr show wlan0", "lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000\n    inet 127.0.0.1/8 scope host lo\n       valid_lft forever preferred_lft forever");
+        adbBase.enableWirelessControl();
+        verify(runtime).exec("adb tcpip 5555");
+        verify(runtime).exec("adb shell ip -f inet addr show wlan0");
+        // Verify that connect was NOT called
+        verify(runtime, never()).exec(contains("adb connect"));
     }
 
     @Test
-    public void testExtractContacts() {
-        ADBBase adbBase = new ADBBase();
+    public void testExtractData_success() throws IOException {
+        mockSuccessfulCommand("adb pull /source/path /destination/path", "/destination/path/file.txt: 1 file pulled, 0 skipped. 0.5 MB/s (1024 bytes in 0.002s)");
+        adbBase.extractData("/source/path", "/destination/path");
+        verify(runtime).exec("adb pull /source/path /destination/path");
+    }
+
+    @Test
+    public void testExtractContacts_success() throws IOException {
+        mockSuccessfulCommand("adb pull /data/data/com.android.providers.contacts/databases/contacts2.db /local/path/contacts.db", "/local/path/contacts.db: 1 file pulled, 0 skipped. 0.8 MB/s (2048 bytes in 0.002s)");
         adbBase.extractContacts("/local/path/contacts.db");
-        String output = adbBase.executeCommand("ls /local/path/contacts.db");
-        assertNotNull(output);
+        verify(runtime).exec("adb pull /data/data/com.android.providers.contacts/databases/contacts2.db /local/path/contacts.db");
     }
 
     @Test
-    public void testExtractSMS() {
-        ADBBase adbBase = new ADBBase();
+    public void testExtractSMS_success() throws IOException {
+        mockSuccessfulCommand("adb pull /data/data/com.android.providers.telephony/databases/mmssms.db /local/path/mmssms.db", "/local/path/mmssms.db: 1 file pulled, 0 skipped. 0.7 MB/s (1536 bytes in 0.002s)");
         adbBase.extractSMS("/local/path/mmssms.db");
-        String output = adbBase.executeCommand("ls /local/path/mmssms.db");
-        assertNotNull(output);
+        verify(runtime).exec("adb pull /data/data/com.android.providers.telephony/databases/mmssms.db /local/path/mmssms.db");
     }
 
     @Test
-    public void testExtractCallLogs() {
-        ADBBase adbBase = new ADBBase();
+    public void testExtractCallLogs_success() throws IOException {
+        mockSuccessfulCommand("adb pull /data/data/com.android.providers.contacts/databases/calllog.db /local/path/calllog.db", "/local/path/calllog.db: 1 file pulled, 0 skipped. 0.6 MB/s (1228 bytes in 0.002s)");
         adbBase.extractCallLogs("/local/path/calllog.db");
-        String output = adbBase.executeCommand("ls /local/path/calllog.db");
-        assertNotNull(output);
+        verify(runtime).exec("adb pull /data/data/com.android.providers.contacts/databases/calllog.db /local/path/calllog.db");
     }
 
     @Test
-    public void testExtractFiles() {
-        ADBBase adbBase = new ADBBase();
-        adbBase.extractFiles("/data/data/com.example/files", "/local/path");
-        String output = adbBase.executeCommand("ls /local/path");
-        assertNotNull(output);
+    public void testExtractFiles_success() throws IOException {
+        mockSuccessfulCommand("adb pull /source/file /destination/dir", "/destination/dir/source/file: 1 file pulled, 0 skipped. 0.9 MB/s (2560 bytes in 0.003s)");
+        adbBase.extractFiles("/source/file", "/destination/dir");
+        verify(runtime).exec("adb pull /source/file /destination/dir");
     }
 
     @Test
-    public void testTraceIPAddress() {
-        ADBBase adbBase = new ADBBase();
+    public void testTraceIPAddress_success() throws IOException {
+        String expectedIP = "inet 192.168.1.100/24 brd 192.168.1.255 scope global wlan0\n";
+        mockSuccessfulCommand("adb shell ip -f inet addr show wlan0", expectedIP);
         String ipAddress = adbBase.traceIPAddress();
-        assertNotNull(ipAddress);
+        assertEquals(expectedIP, ipAddress);
     }
 
     @Test
-    public void testEnableStealthMode() {
-        ADBBase adbBase = new ADBBase();
+    public void testEnableStealthMode_success() throws IOException {
+        mockSuccessfulCommand("adb shell settings put global adb_enabled 0", "");
+        mockSuccessfulCommand("adb shell settings put global development_settings_enabled 0", "");
+        mockSuccessfulCommand("adb shell settings put global usb_debugging_enabled 0", "");
         adbBase.enableStealthMode();
-        String output = adbBase.executeCommand("adb shell settings get global adb_enabled");
-        assertEquals("0", output.trim());
+        verify(runtime).exec("adb shell settings put global adb_enabled 0");
+        verify(runtime).exec("adb shell settings put global development_settings_enabled 0");
+        verify(runtime).exec("adb shell settings put global usb_debugging_enabled 0");
     }
 }
