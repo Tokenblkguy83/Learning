@@ -14,7 +14,7 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.12.2'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.12.2'
     testImplementation 'org.mockito.kotlin:mockito-kotlin:4.1.0' // Added Mockito Kotlin
-    testImplementation 'org.mockito:mockito-junit-jupiter:4.1.0' // Added Mockito JUnit Jupiter extension
+    testImplementation 'org.mockito:mockito-junit-jupiter:4.11.0' // Added Mockito JUnit Jupiter extension
 }
 
 test {
