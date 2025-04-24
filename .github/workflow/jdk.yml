@@ -18,7 +18,7 @@ jobs:
       - name: Setup Java JDK
         uses: actions/setup-java@v3.14.1
         with:
-          java-version: 11
+          java-version: 17
           distribution: adopt
           java-package: jdk
           architecture: x64
@@ -29,12 +29,10 @@ jobs:
           settings-path: ~/.m2
           overwrite-settings: true
           gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
-          gpg-passphrase: $GPG_PASSPHRASE
+          gpg-passphrase: ${{ secrets.GPG_PASSPHRASE }}
           cache: maven
           job-status: ${{ job.status }}
           token: ${{ github.server_url == 'https://github.com' && github.token || '' }}
-          mvn-toolchain-id: adopt_11
-          mvn-toolchain-vendor: adopt
 
       - name: Build with Gradle
         run: ./gradlew build
