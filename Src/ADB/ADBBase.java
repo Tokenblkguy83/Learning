@@ -27,7 +27,7 @@ public class ADBBase {
             }
             reader.close();
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new RuntimeException("Error executing ADB command: " + command, e);
         }
         return output.toString();
     }
