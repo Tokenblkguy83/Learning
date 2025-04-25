@@ -1,0 +1,25 @@
+name: Update Repository
+
+on:
+  schedule:
+    - cron: '0 0 * * SUN'
+
+jobs:
+  update-repo:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Setup Java JDK
+        uses: actions/setup-java@v3.14.1
+        with:
+          java-version: 17
+          distribution: adopt
+          java-package: jdk
+          architecture: x64
+          check-latest: true
+
+      - name: Run update script
+        run: ./gradlew build
