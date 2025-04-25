@@ -8,7 +8,7 @@ repositories {
 
 dependencies {
     implementation(kotlin("stdlib"))
-    testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.12.2")
     testImplementation("org.mockito:mockito-core:5.4.0")
     testImplementation("com.github.tomakehurst:wiremock-jre8:2.35.0") // For mocking C2 server
 }
