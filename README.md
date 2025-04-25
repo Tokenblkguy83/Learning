@@ -54,7 +54,4 @@ For more information, refer to the following resources:
 
 ## Known Issues and Required Fixes
 
-- The `error` method in `Src/Utils/Logger.kt` has a syntax error, missing a `+` operator in the log message concatenation.
-- The `.github/workflow/jdk.yml` file has several optional fields that are not set, which may cause issues during the setup of the Java JDK.
 - The `Tests/ADB_test/ADBBase_test.java` file does not include tests for all methods, such as `extractData`.
-- The `.gitignore` file is not empty and may need to include common patterns to ignore unnecessary files.
