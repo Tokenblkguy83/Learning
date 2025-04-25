@@ -1,57 +1,68 @@
-# Learning
-Basic project learning
+# Learning Project
 
-## Dependency Management
+A Kotlin-based project for learning and demonstrating various programming concepts and security scanning techniques.
 
-This repository uses [Renovate](https://docs.renovatebot.com/) for automated dependency updates. The Dependency Dashboard issue tracks all pending updates and can be found in the Issues tab.
+## Features
 
-### Features of our Renovate setup:
+- ADB-based malicious package detection
+- Configurable logging system
+- Environment variable-based configuration
 
-- Automated dependency updates run every weekend
-- Minor and patch updates are automatically merged
-- Development dependencies are automatically merged
-- Semantic commit messages for dependency updates
-- Dependency Dashboard for monitoring updates
+## Prerequisites
 
-For more information, see the [Renovate documentation](https://docs.renovatebot.com/key-concepts/dashboard/).
+- JDK 17 or higher
+- Gradle 7.6 or higher
+- Android Debug Bridge (ADB) for Android device scanning features
 
-## ADB Functionality
+## Getting Started
 
-This repository includes basic adb functionality provided by the `ADBBase` class. The `ADBBase` class provides methods to start and stop the adb server, as well as execute adb commands.
+1. Clone the repository:
+   ```
+   git clone https://github.com/Tokenblkguy83/Learning.git
+   cd Learning
+   ```
 
-### Methods
+2. Build the project:
+   ```
+   ./gradlew build
+   ```
 
-- `startADBServer()`: Starts the adb server.
-- `stopADBServer()`: Stops the adb server.
-- `executeCommand(String command)`: Executes the given adb command and returns the output as a string.
-- `runADBServerWithoutPC()`: Runs the adb server without requiring a PC.
-- `hackDevice()`: Simulates hacking by executing a command to access device files.
-- `defendAgainstHack()`: Simulates defense by checking for unauthorized access and stopping the ADB server.
-- `testBroadcastReceiverLifecycle()`: Tests the lifecycle methods of an Android broadcast receiver.
-- `testBroadcastReceiverInteraction()`: Tests the interaction between broadcast receivers and other components.
-- `testBroadcastReceiverHandling()`: Tests the handling of different types of broadcast messages.
-- `testActivityLifecycle()`: Tests the lifecycle methods of an Android activity.
-- `testActivityInteraction()`: Tests the interaction between activities.
-- `testActivityUIElements()`: Tests the UI elements of an activity.
-- `testServiceLifecycle()`: Tests the lifecycle methods of an Android service.
-- `testServiceInteraction()`: Tests the interaction between services and other components.
-- `testServiceBackgroundProcessing()`: Tests the background processing capabilities of a service.
-- `enableWirelessControl()`: Enables full wireless control of the device.
-- `extractData(String sourcePath, String destinationPath)`: Extracts data from the device using ADB commands.
-- `extractContacts(String destinationPath)`: Extracts contacts from the device using ADB commands.
-- `extractSMS(String destinationPath)`: Extracts SMS messages from the device using ADB commands.
-- `extractCallLogs(String destinationPath)`: Extracts call logs from the device using ADB commands.
-- `extractFiles(String sourcePath, String destinationPath)`: Extracts files from the device using ADB commands.
-- `traceIPAddress()`: Traces the IP address of the device using ADB commands.
-- `enableStealthMode()`: Enables stealth mode by disabling notifications and hiding the ADB connection from the user.
+3. Run the application:
+   ```
+   ./gradlew run
+   ```
 
-## Documentation
+4. Run with ADB scanning:
+   ```
+   ./gradlew run --args="--scan-adb"
+   ```
 
-For more information, refer to the following resources:
+## Configuration
 
-- [API Reference](Docs/Api-Reference.md)
-- [Setup Guide](Docs/Setup-guide.md)
+The application can be configured using environment variables or by modifying the `config.properties` file located in `src/main/resources`.
 
-## Known Issues and Required Fixes
+### Important Environment Variables
 
-- The `Tests/ADB_test/ADBBase_test.java` file does not include tests for all methods, such as `extractData`.
+- `DB_USERNAME` - Database username
+- `DB_PASSWORD` - Database password
+- `SECURITY_ENCRYPTION_KEY` - Encryption key for sensitive data
+- `EMAIL_SMTP_HOST` - SMTP server for email notifications
+- `EMAIL_SMTP_USERNAME` - Email username
+- `EMAIL_SMTP_PASSWORD` - Email password
+
+## Project Structure
+
+- `src/main/kotlin/com/example` - Main application code
+- `src/main/kotlin/Src/ADB` - ADB-related functionality
+- `src/main/kotlin/Src/Utils` - Utility classes including logging
+- `src/main/resources` - Configuration files
+
+## Security Considerations
+
+- Sensitive configuration values should be provided via environment variables
+- Do not commit real credentials to the repository
+- The ADB scanning feature requires proper permissions
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
