@@ -1,5 +1,5 @@
 plugins {
-    kotlin("jvm") version "2.1.20"
+    kotlin("jvm") version "1.5.31"
 }
 
 repositories {
@@ -18,6 +18,6 @@ tasks.test {
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
 }
