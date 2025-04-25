@@ -15,7 +15,7 @@ dependencies {
     
     // Add logging dependencies
     implementation("org.slf4j:slf4j-api:2.0.9")
-    implementation("ch.qos.logback:logback-classic:1.4.11")
+    implementation("ch.qos.logback:logback-classic:1.5.18")
     
     // Add testing dependencies
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.0")
