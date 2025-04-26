@@ -12,6 +12,7 @@ data class C2Config(
 )
 
 class C2ConfigLoader(private val logger: Logger = Logger()) {
+    @JvmStatic
     fun loadConfig(filePath: String = "C2_config.properties"): C2Config {
         val properties = Properties()
         val config = C2Config()

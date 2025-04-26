@@ -1,5 +1,6 @@
 plugins {
     kotlin("jvm") version "1.9.22" // Ensure this matches your Kotlin version
+    application
 }
 
 group = "Src"
@@ -46,4 +47,8 @@ tasks.register("printJavaVersion") {
     doLast {
         println("Java version: ${System.getProperty("java.version")}")
     }
+}
+
+application {
+    mainClass.set("Src.MainKt")
 }

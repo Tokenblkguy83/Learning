@@ -77,6 +77,7 @@ class Logger(private var currentLevel: LogLevel = LogLevel.INFO, private val out
         }
     }
 
+    @JvmStatic
     private fun log(level: String, message: String) {
         outputs.forEach { it.log(level, message) }
     }
