@@ -29,7 +29,7 @@ fun main() {
     println("15. Get Device Info")
     println("16. Read Logcat")
     println("17. Check Device Status")
-    println("18. C2 - Start Server (already integrated in Prepare Attack)")
+    println("18. C2 - Start Server")
     println("19. C2 - Stop Server")
     println("0. Exit")
 
@@ -176,6 +176,11 @@ fun main() {
                 println("ADB Accessible: ${adb.isAdbAccessible()}")
                 println("Rooted: ${adb.isDeviceRooted()}")
                 println("--- End of Status ---")
+            }
+            "18" -> {
+                println("Starting C2 server...")
+                adb.startC2Server()
+                println("C2 server started.")
             }
             "19" -> {
                 println("Stopping C2 server...")
