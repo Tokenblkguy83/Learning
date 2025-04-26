@@ -3,6 +3,9 @@ package Src
 import Src.ADB.ADBBase
 import java.util.Scanner
 
+/**
+ * Main function to interact with the ADB interface.
+ */
 fun main() {
     val adb = ADBBase()
     val scanner = Scanner(System.`in`)

