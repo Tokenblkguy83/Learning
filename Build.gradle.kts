@@ -39,3 +39,9 @@ tasks.jar {
         exclude("META-INF/*.RSA")
     }
 }
+
+tasks.register("printJavaVersion") {
+    doLast {
+        println("Java version: ${System.getProperty("java.version")}")
+    }
+}
