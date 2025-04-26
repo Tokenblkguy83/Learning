@@ -7,7 +7,7 @@ fun main() {
     val adb = ADBBase()
     val scanner = Scanner(System.`in`)
 
-    println("--- Malicious ADB Interface (Educational Purposes Only) ---")
+    println("--- ADB Interface (Educational Purposes Only) ---")
     println("Connected to ADB? ${adb.isAdbAccessible()}")
     println("Device Rooted? ${adb.isDeviceRooted()}")
     println()
