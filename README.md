@@ -31,6 +31,22 @@ The primary purpose of this project is to serve as a learning resource for indiv
 19. **C2 - Stop Server**: Stop the C2 server.
 20. **Exit**: Exit the tool.
 
+## Running Tests
+
+To run the tests for this project, follow these steps:
+
+1. Ensure you have the necessary dependencies installed. You can do this by running:
+   ```sh
+   ./gradlew build
+   ```
+
+2. Run the tests using the following command:
+   ```sh
+   ./gradlew test
+   ```
+
+3. The test results will be displayed in the console, and a detailed report will be generated in the `build/reports/tests/test` directory.
+
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.

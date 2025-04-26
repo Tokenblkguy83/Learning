@@ -15,6 +15,8 @@ dependencies {
     implementation("org.slf4j:slf4j-simple:2.0.9") // Or your SLF4j implementation
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3") // For coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.7.3") // For Java 8 integration
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.1")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.8.1")
 }
 
 kotlin {
