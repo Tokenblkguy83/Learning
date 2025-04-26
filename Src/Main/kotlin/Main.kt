@@ -1,13 +1,13 @@
 package Src
 
-import Src.ADB.MaliciousADBBase
+import Src.ADB.ADBBase
 import java.util.Scanner
 
 fun main() {
-    val adb = MaliciousADBBase()
+    val adb = ADBBase()
     val scanner = Scanner(System.`in`)
 
-    println("--- Malicious ADB Interface (Educational Purposes Only) ---")
+    println("--- ADB Interface (Educational Purposes Only) ---")
     println("Connected to ADB? ${adb.isAdbAccessible()}")
     println("Device Rooted? ${adb.isDeviceRooted()}")
     println()
