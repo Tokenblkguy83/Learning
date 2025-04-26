@@ -2,7 +2,7 @@ package Src.ADB
 
 import java.io.BufferedReader
 import java.io.InputStreamReader
-import java.net.InetAddress
+import jpava.net.InetAddress
 import java.util.concurrent.*
 import java.util.regex.Pattern
 import Src.Utils.Logger
