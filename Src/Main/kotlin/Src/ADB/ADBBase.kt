@@ -10,6 +10,8 @@ import java.net.Socket
 import java.util.Properties
 import java.util.concurrent.TimeUnit
 import kotlin.random.Random
+import kotlinx.serialization.*
+import kotlinx.serialization.json.Json
 
 /**
  * A refined malicious ADB interface with enhanced features and asynchronous operations.

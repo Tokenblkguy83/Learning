@@ -5,7 +5,7 @@ import java.io.FileWriter
 import java.time.LocalDateTime
 
 enum class LogLevel {
-    DEBUG, INFO, WARNING, ERROR, FATAL
+    TRACE, DEBUG, INFO, WARNING, ERROR, FATAL
 }
 
 interface LogOutput {
@@ -77,8 +77,15 @@ class Logger(private var currentLevel: LogLevel = LogLevel.INFO, private val out
         }
     }
 
+    fun trace(message: String) {
+        if (shouldLog(LogLevel.TRACE)) {
+            log("TRACE", message)
+        }
+    }
+
     private fun log(level: String, message: String) {
-        outputs.forEach { it.log(level, message) }
+        val timestamp = LocalDateTime.now()
+        outputs.forEach { it.log(level, "[$timestamp] $message") }
     }
 
     fun close() {

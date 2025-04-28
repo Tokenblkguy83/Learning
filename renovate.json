@@ -4,7 +4,7 @@
     "config:recommended",
     ":dependencyDashboard"
   ],
-  "schedule": ["every weekend"],
+  "schedule": ["every weekday"],
   "packageRules": [
     {
       "matchUpdateTypes": ["minor", "patch"],
@@ -13,6 +13,10 @@
     },
     {
       "matchDepTypes": ["devDependencies"],
+      "automerge": true
+    },
+    {
+      "matchUpdateTypes": ["major"],
       "automerge": true
     }
   ],

@@ -71,3 +71,27 @@ Contributions are welcome! If you have any suggestions, bug reports, or feature 
 ## Contact
 
 For any inquiries or questions, please contact us at [email@example.com](mailto:email@example.com).
+
+## Contributing Guidelines
+
+We welcome contributions from the community! If you would like to contribute to this project, please follow these guidelines:
+
+1. **Fork the Repository**: Start by forking the repository to your own GitHub account.
+
+2. **Create a Branch**: Create a new branch for your feature or bug fix. Use a descriptive name for your branch, such as `feature/add-new-feature` or `bugfix/fix-issue`.
+
+3. **Make Changes**: Make your changes in the new branch. Ensure that your code follows the project's coding standards and conventions.
+
+4. **Write Tests**: If applicable, write tests for your changes to ensure that they work as expected and do not introduce any regressions.
+
+5. **Commit Changes**: Commit your changes with a clear and concise commit message. Use the present tense and provide a brief description of the changes made.
+
+6. **Push to GitHub**: Push your changes to your forked repository on GitHub.
+
+7. **Create a Pull Request**: Open a pull request (PR) from your branch to the main repository's `main` branch. Provide a detailed description of your changes and any relevant information.
+
+8. **Review and Feedback**: Your pull request will be reviewed by the project maintainers. Be open to feedback and make any necessary revisions.
+
+9. **Merge**: Once your pull request is approved, it will be merged into the main repository. Congratulations, you have contributed to the project!
+
+Thank you for your contributions and for helping to improve this project!

