@@ -192,3 +192,30 @@ fun main() {
     println("Exiting.")
     scanner.close()
 }
+
+fun showDescription(actionNumber: String) {
+    val descriptions = mapOf(
+        "1" to "Prepare Attack: Enable stealth, persistent access, and start C2 server.",
+        "2" to "Steal All Data: Exfiltrate all accessible data to /sdcard/stolen_data.",
+        "3" to "Dump System Info: Dump system information to /sdcard/system_info.",
+        "4" to "Simulate Ransomware: Simulate ransomware on the device.",
+        "5" to "Install Malware: Install malware from a specified APK path.",
+        "6" to "Execute Shell Command: Execute a shell command on the device.",
+        "7" to "List Files: List files in a specified directory.",
+        "8" to "Pull File: Pull a file from the device to the local machine.",
+        "9" to "Push File: Push a file from the local machine to the device.",
+        "10" to "Install APK: Install an APK on the device.",
+        "11" to "Uninstall App: Uninstall an application from the device.",
+        "12" to "Clear App Data: Clear data for a specified application.",
+        "13" to "Reboot Device: Reboot the device.",
+        "14" to "Take Screenshot: Take a screenshot and save it to the device.",
+        "15" to "Get Device Info: Retrieve device information such as model, serial number, and Android version.",
+        "16" to "Read Logcat: Read the logcat output from the device.",
+        "17" to "Check Device Status: Check the ADB accessibility and root status of the device.",
+        "18" to "C2 - Start Server: Start the C2 server (already integrated in Prepare Attack).",
+        "19" to "C2 - Stop Server: Stop the C2 server.",
+        "0" to "Exit: Exit the tool."
+    )
+
+    println(descriptions[actionNumber] ?: "Invalid action number.")
+}

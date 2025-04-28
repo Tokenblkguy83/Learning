@@ -5,7 +5,7 @@ import java.io.FileWriter
 import java.time.LocalDateTime
 
 enum class LogLevel {
-    DEBUG, INFO, WARNING, ERROR, FATAL
+    DEBUG, INFO, WARNING, ERROR, FATAL, DESCRIPTION
 }
 
 interface LogOutput {
@@ -74,6 +74,12 @@ class Logger(private var currentLevel: LogLevel = LogLevel.INFO, private val out
     fun fatal(message: String) {
         if (shouldLog(LogLevel.FATAL)) {
             log("FATAL", message)
+        }
+    }
+
+    fun description(message: String) {
+        if (shouldLog(LogLevel.DESCRIPTION)) {
+            log("DESCRIPTION", message)
         }
     }
 
