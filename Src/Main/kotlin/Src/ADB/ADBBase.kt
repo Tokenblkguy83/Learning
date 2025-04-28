@@ -393,4 +393,24 @@ class ADBBase(private val logger: Logger = Logger()) {
         stopC2Server()
         logger.info("Resources cleaned up.")
     }
+
+    /**
+     * Loads the configuration from the properties file.
+     */
+    private fun loadConfig(): Properties {
+        val properties = Properties()
+        try {
+            FileInputStream("Src/Main/Resources/config.properties").use { properties.load(it) }
+            val dbPassword = System.getenv("DB_PASSWORD")
+            if (dbPassword != null) {
+                properties.setProperty("database.password", dbPassword)
+                logger.info("Database password retrieved from environment variable.")
+            } else {
+                logger.warning("Environment variable for database password not set.")
+            }
+        } catch (e: IOException) {
+            logger.error("Error loading configuration: ${e.message}")
+        }
+        return properties
+    }
 }
