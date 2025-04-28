@@ -85,4 +85,17 @@ class Logger(private var currentLevel: LogLevel = LogLevel.INFO, private val out
     fun close() {
         outputs.filterIsInstance<FileOutput>().forEach { it.close() }
     }
+
+    // Samsung-specific optimization
+    fun optimizeForSamsung() {
+        if (isSamsungDevice()) {
+            setLevel(LogLevel.WARNING) // Set log level to WARNING for Samsung devices
+            info("Optimized logging for Samsung devices.")
+        }
+    }
+
+    private fun isSamsungDevice(): Boolean {
+        val manufacturer = System.getProperty("os.name").toLowerCase()
+        return manufacturer.contains("samsung")
+    }
 }

