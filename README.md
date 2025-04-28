@@ -204,3 +204,7 @@ We welcome contributions to the ADBTool project! If you would like to contribute
 If you encounter any issues or have suggestions for improvements, please open an issue on the GitHub repository. Provide as much detail as possible to help us understand and address the issue.
 
 Thank you for contributing to ADBTool!
+
+## Configuration
+
+The database password should be set via an environment variable for enhanced security. Ensure that the environment variable `DB_PASSWORD` is set before running the application.
