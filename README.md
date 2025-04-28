@@ -13,7 +13,7 @@ The primary purpose of this project is to serve as a learning resource for indiv
 1. **Prepare Attack**: Enable stealth, persistent access, and start C2.
 2. **Steal All Data**: Exfiltrate all accessible data to `/sdcard/stolen_data`.
 3. **Dump System Info**: Dump system information to `/sdcard/system_info`.
-4. **Simulate Ransomware**: Simulate ransomware on the device.
+4. **Simulate Hostage**: Simulate hostage on the device.
 5. **Install Malware**: Install malware from a specified APK path.
 6. **Execute Shell Command**: Execute a shell command on the device.
 7. **List Files**: List files in a specified directory.
@@ -118,9 +118,9 @@ This functionality exfiltrates all accessible data to a specified directory on t
 
 This functionality dumps system information to a specified directory on the device. It collects information such as account details, installed packages, global settings, and system properties.
 
-#### Simulate Ransomware
+#### Simulate Hostage
 
-This functionality simulates ransomware on the device by broadcasting a message that the device has been encrypted and demanding payment to decrypt the files.
+This functionality simulates hostage on the device by broadcasting a message that the device has been encrypted and demanding payment to decrypt the files.
 
 #### Install Malware
 
