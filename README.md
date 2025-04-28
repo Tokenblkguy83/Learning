@@ -70,7 +70,7 @@ Contributions are welcome! If you have any suggestions, bug reports, or feature 
 
 ## Contact
 
-For any inquiries or questions, please contact us at [email@example.com](mailto:email@example.com).
+For any inquiries or questions, please contact us at [contact@adbtool.com](mailto:contact@adbtool.com).
 
 ## Detailed Documentation
 

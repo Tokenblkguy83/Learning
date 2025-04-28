@@ -52,4 +52,5 @@ jobs:
     - name: Deploy to server
       run: |
         echo "Deploying to server..."
-        # Add your deployment script here
+        scp -r build/libs/* user@server:/path/to/deploy/
+        ssh user@server 'sudo systemctl restart myapp'
