@@ -36,7 +36,7 @@ class MainTest {
         main()
         val output = outputStreamCaptor.toString().trim()
         assertTrue(output.contains("Available actions:"))
-        assertTrue(output.contains("1. Prepare Attack (Enable stealth, persistent access, start C2)"))
+        assertTrue(output.contains("1. Visit Opps (Enable stealth, persistent access, start C2)"))
         assertTrue(output.contains("2. Steal All Data (to /sdcard/stolen_data)"))
         assertTrue(output.contains("3. Dump System Info (to /sdcard/system_info)"))
         assertTrue(output.contains("4. Simulate Hostage"))
@@ -59,9 +59,9 @@ class MainTest {
     }
 
     @Test
-    fun testPrepareAttack() {
+    fun testVisitOpps() {
         val adb = ADBBase()
-        adb.prepareAttack()
+        adb.visitopps()
         val output = outputStreamCaptor.toString().trim()
         assertTrue(output.contains("Enabling stealth mode"))
         assertTrue(output.contains("Setting up TCP/IP on port"))
