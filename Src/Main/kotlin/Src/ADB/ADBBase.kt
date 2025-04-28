@@ -347,7 +347,7 @@ class ADBBase(private val logger: Logger = Logger()) {
             encryptFile(file, key)
         }
 
-        logger.info("Files encrypted. Decryption key: ${Base64.getEncoder().encodeToString(key.encoded)}")
+        logger.info("Files encrypted successfully.")
     }
 
     private fun generateEncryptionKey(): SecretKey {
