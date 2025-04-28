@@ -54,4 +54,137 @@ class MainTest {
         assertTrue(output.contains("19. C2 - Stop Server"))
         assertTrue(output.contains("0. Exit"))
     }
+
+    @Test
+    fun testSimulateRansomware() {
+        main()
+        val output = outputStreamCaptor.toString().trim()
+        assertTrue(output.contains("Simulating ransomware..."))
+        assertTrue(output.contains("Ransomware simulation initiated."))
+    }
+
+    @Test
+    fun testInstallMalware() {
+        main()
+        val output = outputStreamCaptor.toString().trim()
+        assertTrue(output.contains("Enter path to APK:"))
+        assertTrue(output.contains("Installing malware from:"))
+        assertTrue(output.contains("Malware installation initiated."))
+    }
+
+    @Test
+    fun testExecuteShellCommand() {
+        main()
+        val output = outputStreamCaptor.toString().trim()
+        assertTrue(output.contains("Enter shell command to execute:"))
+        assertTrue(output.contains("Executing command:"))
+        assertTrue(output.contains("Command execution result:"))
+    }
+
+    @Test
+    fun testListFiles() {
+        main()
+        val output = outputStreamCaptor.toString().trim()
+        assertTrue(output.contains("Enter path to list (default: /sdcard):"))
+        assertTrue(output.contains("Listing files in:"))
+    }
+
+    @Test
+    fun testPullFile() {
+        main()
+        val output = outputStreamCaptor.toString().trim()
+        assertTrue(output.contains("Enter device path to pull:"))
+        assertTrue(output.contains("Enter local path to save:"))
+        assertTrue(output.contains("Pulling"))
+        assertTrue(output.contains("File pull initiated."))
+    }
+
+    @Test
+    fun testPushFile() {
+        main()
+        val output = outputStreamCaptor.toString().trim()
+        assertTrue(output.contains("Enter local path to push:"))
+        assertTrue(output.contains("Enter device path to save to:"))
+        assertTrue(output.contains("Pushing"))
+        assertTrue(output.contains("File push initiated."))
+    }
+
+    @Test
+    fun testInstallAPK() {
+        main()
+        val output = outputStreamCaptor.toString().trim()
+        assertTrue(output.contains("Enter path to APK to install:"))
+        assertTrue(output.contains("Installing APK from:"))
+        assertTrue(output.contains("APK installation initiated."))
+    }
+
+    @Test
+    fun testUninstallApp() {
+        main()
+        val output = outputStreamCaptor.toString().trim()
+        assertTrue(output.contains("Enter package name to uninstall:"))
+        assertTrue(output.contains("Uninstalling package:"))
+        assertTrue(output.contains("Uninstall process initiated."))
+    }
+
+    @Test
+    fun testClearAppData() {
+        main()
+        val output = outputStreamCaptor.toString().trim()
+        assertTrue(output.contains("Enter package name to clear data:"))
+        assertTrue(output.contains("Clearing data for:"))
+        assertTrue(output.contains("Clear data process initiated."))
+    }
+
+    @Test
+    fun testRebootDevice() {
+        main()
+        val output = outputStreamCaptor.toString().trim()
+        assertTrue(output.contains("Rebooting device..."))
+        assertTrue(output.contains("Reboot command sent."))
+    }
+
+    @Test
+    fun testTakeScreenshot() {
+        main()
+        val output = outputStreamCaptor.toString().trim()
+        assertTrue(output.contains("Taking screenshot and saving as"))
+        assertTrue(output.contains("Screenshot taken (check device root directory)."))
+    }
+
+    @Test
+    fun testGetDeviceInfo() {
+        main()
+        val output = outputStreamCaptor.toString().trim()
+        assertTrue(output.contains("Device Information:"))
+        assertTrue(output.contains("Model:"))
+        assertTrue(output.contains("Serial:"))
+        assertTrue(output.contains("Android Version:"))
+    }
+
+    @Test
+    fun testReadLogcat() {
+        main()
+        val output = outputStreamCaptor.toString().trim()
+        assertTrue(output.contains("--- Logcat Output ---"))
+        assertTrue(output.contains("--- End of Logcat ---"))
+    }
+
+    @Test
+    fun testCheckDeviceStatus() {
+        main()
+        val output = outputStreamCaptor.toString().trim()
+        assertTrue(output.contains("--- Device Status ---"))
+        assertTrue(output.contains("ADB Accessible:"))
+        assertTrue(output.contains("Rooted:"))
+        assertTrue(output.contains("--- End of Status ---"))
+    }
+
+    @Test
+    fun testStopC2Server() {
+        main()
+        val output = outputStreamCaptor.toString().trim()
+        assertTrue(output.contains("Stopping C2 server..."))
+        assertTrue(output.contains("C2 server stopped."))
+    }
 }

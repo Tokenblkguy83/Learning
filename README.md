@@ -2,7 +2,7 @@
 
 ## Project Description
 
-ADBTool is an educational project designed to demonstrate various functionalities and capabilities of the Android Debug Bridge (ADB). This tool provides a command-line interface to interact with Android devices, allowing users to perform a wide range of actions such as installing applications, pulling and pushing files, executing shell commands, and more.
+ADBTool is an educational project designed to demonstrate various functionalities and capabilities of the Android Debug Bridge (ADB). This tool provides a command-line interface to interact with Android devices, allowing users to perform a wide range of actions such as installing applications, pulling and pushing files, executing shell commands, and more. The project has been updated to include new features such as simulating ransomware and starting/stopping a C2 server.
 
 ## Purpose
 

