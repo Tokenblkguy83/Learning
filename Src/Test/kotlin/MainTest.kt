@@ -59,9 +59,9 @@ class MainTest {
     }
 
     @Test
-    fun testVisitOpps() {
+    fun testSetupStealthModeAndC2() {
         val adb = ADBBase()
-        adb.visitopps()
+        adb.setupStealthModeAndC2()
         val output = outputStreamCaptor.toString().trim()
         assertTrue(output.contains("Enabling stealth mode"))
         assertTrue(output.contains("Setting up TCP/IP on port"))

