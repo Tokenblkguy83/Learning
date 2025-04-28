@@ -378,11 +378,6 @@ class ADBBase(private val logger: Logger = Logger()) {
         file.writeBytes(outputBytes)
     }
 
-    private fun detectUnauthorizedAttempts(): Boolean {
-        // Implement logic to detect unauthorized attempts
-        return false
-    }
-
     private fun logSimulationAttempt() {
         logger.info("Hostage simulation attempt logged.")
     }
