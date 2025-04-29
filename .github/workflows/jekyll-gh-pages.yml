@@ -55,21 +55,21 @@ jobs:
       - name: Create Default Gemfile
         if: steps.gemfile_check.outputs.exists == 'false'
         run: |
-          cat <<EOF > Gemfile
-          source 'https://rubygems.org'
-
-          # Essential Jekyll and SEO gems
-          gem 'jekyll', '${{ env.DEFAULT_JEKYLL_VERSION }}'
-          ${{ env.DEFAULT_GEMS.split(' ').map { |gem| "gem '#{gem}'" }.join('\n') }}
-
-          # Common development and utility gems (you can adjust these)
-          gem 'jekyll-paginate'
-          gem 'jekyll-sitemap'
-          gem 'kramdown' # Or your preferred Markdown processor
-
-          # If you have a Gemfile.lock, ensure it's committed to the repository
-          # 'bundle install' will create it if it doesn't exist
-          EOF
+          echo "source 'https://rubygems.org'" >> Gemfile
+          echo "" >> Gemfile
+          echo "# Essential Jekyll and SEO gems" >> Gemfile
+          echo "gem 'jekyll', '${{ env.DEFAULT_JEKYLL_VERSION }}'" >> Gemfile
+          for gem in ${{ env.DEFAULT_GEMS }}; do
+            echo "gem '$gem'" >> Gemfile
+          done
+          echo "" >> Gemfile
+          echo "# Common development and utility gems (you can adjust these)" >> Gemfile
+          echo "gem 'jekyll-paginate'" >> Gemfile
+          echo "gem 'jekyll-sitemap'" >> Gemfile
+          echo "gem 'kramdown' # Or your preferred Markdown processor" >> Gemfile
+          echo "" >> Gemfile
+          echo "# If you have a Gemfile.lock, ensure it's committed to the repository" >> Gemfile
+          echo "# 'bundle install' will create it if it doesn't exist" >> Gemfile
           echo "Created a default Gemfile with Jekyll ${{ env.DEFAULT_JEKYLL_VERSION }} and default gems including common utilities."
 
       - name: Install Dependencies
