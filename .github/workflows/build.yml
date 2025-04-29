@@ -1,4 +1,4 @@
-name: Build and Test
+name: Optimized Build, Test, and Deploy
 
 on:
   push:
@@ -8,46 +8,94 @@ on:
     branches:
       - Test-build
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GRADLE_OPTS: "-Dorg.gradle.daemon=true -Dorg.gradle.jvmargs=-Xmx2g -Dorg.gradle.configuration-cache=true"
+  MAVEN_OPTS: "-Dmaven.wagon.http.ssl.insecure=true -Dmaven.wagon.http.ssl.allowall=true" # If you were using Maven
+
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      build_successful: ${{ steps.build_status.outputs.success }}
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
+      with:
+        persist-credentials: false
+        fetch-depth: 0
 
     - name: Set up JDK 16
-      uses: actions/setup-java@v2
+      uses: actions/setup-java@v3
       with:
         java-version: 16
+        distribution: 'temurin'
+        cache: 'gradle'
+
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
 
     - name: Build with Gradle
-      uses: gradle/gradle-build-action@v2
+      id: build_step
+      run: ./gradlew build --no-daemon
+      continue-on-error: true
+
+    - name: Check Build Status
+      id: build_status
+      run: echo "success=${{ job.status == 'success' }}" >> $GITHUB_OUTPUT
+
+  test:
+    runs-on: ubuntu-latest
+    needs: build
+    if: needs.build.outputs.build_successful == 'true'
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
       with:
-        arguments: build
+        persist-credentials: false
+        fetch-depth: 0
+
+    - name: Set up JDK 16
+      uses: actions/setup-java@v3
+      with:
+        java-version: 16
+        distribution: 'temurin'
+        cache: 'gradle'
+
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
 
     - name: Run tests
-      uses: gradle/gradle-build-action@v2
-      with:
-        arguments: test
+      run: ./gradlew test --no-daemon
 
   deploy:
     runs-on: ubuntu-latest
-    needs: build
+    needs: test
+    if: needs.test.result == 'success'
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
+      with:
+        persist-credentials: false
 
     - name: Set up JDK 11
-      uses: actions/setup-java@v2
+      uses: actions/setup-java@v3
       with:
         java-version: 11
+        distribution: 'temurin'
 
-    - name: Build with Gradle
-      uses: gradle/gradle-build-action@v2
-      with:
-        arguments: build
+    - name: Grant execute permission for gradlew
+      if: steps.checkout.outcome == 'success'
+      run: chmod +x gradlew
+
+    - name: Build with Gradle (for deploy)
+      run: ./gradlew build --no-daemon
 
     - name: Deploy to server
       run: |
