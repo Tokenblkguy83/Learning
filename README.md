@@ -47,6 +47,22 @@ To run the tests for this project, follow these steps:
 
 3. The test results will be displayed in the console, and a detailed report will be generated in the `build/reports/tests/test` directory.
 
+## Running the UI Application
+
+To run the UI application for this project, follow these steps:
+
+1. Ensure you have the necessary dependencies installed. You can do this by running:
+   ```sh
+   ./gradlew build
+   ```
+
+2. Run the UI application using the following command:
+   ```sh
+   ./gradlew run
+   ```
+
+3. The UI application will launch, providing a graphical interface to interact with the ADBTool functionalities.
+
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.

@@ -34,7 +34,7 @@ tasks.test {
 
 tasks.jar {
     manifest {
-        attributes("Main-Class", "Src.MainKt")
+        attributes("Main-Class", "Src.UI.MainUIKt")
     }
     from(sourceSets.main.get().output)
     dependsOn(configurations.runtimeClasspath)
@@ -54,5 +54,5 @@ tasks.register("printJavaVersion") {
 }
 
 application {
-    mainClass.set("Src.MainKt")
+    mainClass.set("Src.UI.MainUIKt")
 }
