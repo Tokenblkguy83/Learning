@@ -48,7 +48,7 @@ jobs:
 
       - name: Check for Gemfile
         id: gemfile_check
-        uses: andymckay/gh-action-file-exists@main # Changed to 'main'
+        uses: andymckay/gh-action-file-exists@v1.2 # Trying a newer specific version
         with:
           path: Gemfile
 
