@@ -1,6 +1,6 @@
-package Src.ADB
+package main.kotlin.src.adb
 
-import Src.Utils.Logger
+import main.kotlin.src.utils.Logger
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow

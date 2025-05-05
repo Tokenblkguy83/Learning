@@ -1,6 +1,6 @@
 #!/bin/bash
 
-CONFIG_FILE="Src/Main/Resources/config.properties"
+CONFIG_FILE="Resources/config.properties"
 
 # Check if the configuration file exists
 if [ ! -f "$CONFIG_FILE" ]; then

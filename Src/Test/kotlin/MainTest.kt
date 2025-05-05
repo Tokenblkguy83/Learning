@@ -1,3 +1,6 @@
+package test.kotlin
+
+import main.kotlin.src.adb.ADBBase
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.BeforeEach
