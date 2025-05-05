@@ -1,4 +1,4 @@
-package Src.Utils
+package main.kotlin.src.utils
 
 import java.io.File
 import java.io.FileWriter

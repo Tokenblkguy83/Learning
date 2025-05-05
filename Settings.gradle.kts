@@ -1,1 +1,1 @@
-rootProject.name = "ADBTool"
+rootProject.name = "main.kotlin"

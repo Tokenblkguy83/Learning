@@ -1,6 +1,6 @@
-package Src
+package main.kotlin
 
-import Src.ADB.ADBBase
+import main.kotlin.src.adb.ADBBase
 import java.util.Scanner
 
 /**

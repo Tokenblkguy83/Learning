@@ -1,9 +1,9 @@
-package Src.ADB
+package main.kotlin.src.adb
 
 import java.io.FileInputStream
 import java.io.IOException
 import java.util.Properties
-import Src.Utils.Logger
+import main.kotlin.src.utils.Logger
 
 data class C2Config(
     val serverIp: String = "",
