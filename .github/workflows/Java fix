@@ -1,0 +1,166 @@
+name: Java Auto-Fix and Report on Commit
+
+on:
+  push:
+    branches: [ main ]
+
+permissions: # Added permissions block for clarity and security
+  contents: write # Needed for committing and pushing changes
+  security-events: write # Needed for uploading SARIF reports (e.g., from SpotBugs, PMD)
+
+jobs:
+  auto-fix-and-report:
+    name: Auto-Fix Code Style and Report Issues
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java-version: ['17', '21']
+        # You can define the "primary" JDK for committing here if needed,
+        # but the current logic of only committing on JDK 17 is also fine.
+        # Example:
+        # include:
+        #   - java-version: '17'
+        #     is_primary_formatter: true
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          # For push events, github.sha is the commit that triggered the workflow.
+          # Using github.sha ensures you're acting on the exact commit.
+          # actions/checkout default behavior on push is fine too, this is just more explicit.
+          ref: ${{ github.sha }}
+          # Fetch depth 0 is needed if your formatter or analysis tools require full git history
+          # For simple formatting and diff, it's often not required.
+          # fetch-depth: 0 # Uncomment if full history is needed
+
+      - name: Cache Maven dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Set up JDK ${{ matrix.java-version }}
+        uses: actions/setup-java@v4 # Updated to v4
+        with:
+          java-version: ${{ matrix.java-version }}
+          distribution: 'temurin'
+          cache: 'maven' # Enable caching for Maven downloads by setup-java
+
+      - name: Make mvnw executable
+        if: success() # Only run if previous steps were successful
+        run: chmod +x ./mvnw
+
+      - name: Format code with Google Java Format
+        id: google-java-format
+        if: success()
+        run: |
+          ./mvnw --batch-mode com.google.code.java-format:java-format-maven-plugin:format
+          # Check if the formatter actually made and staged changes
+          echo "FORMATTED_FILES=$(git diff --staged --name-only)" >> $GITHUB_OUTPUT
+
+      - name: Commit and push formatting changes
+        # Only commit if files were formatted AND this is the JDK 17 run (to avoid multiple commits)
+        if: steps.google-java-format.outputs.FORMATTED_FILES && matrix.java-version == '17'
+        run: |
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add .
+          # Add [skip ci] to the commit message to prevent this commit from re-triggering the workflow
+          git commit -m "Automated code formatting (JDK ${{ matrix.java-version }}) [skip ci]"
+          # Push to the branch that triggered the workflow
+          git push origin HEAD:${{ github.ref_name }}
+        # env:
+          # GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # GITHUB_TOKEN is automatically available
+
+      # It's good practice to re-checkout if changes were pushed,
+      # to ensure subsequent steps use the absolute latest code, especially for the JDK 21 run.
+      # However, this adds complexity. The current flow means JDK 21 analyzes the code it formatted locally,
+      # not necessarily the version committed by JDK 17. This is usually acceptable if formatting is deterministic.
+      # If you want all jobs to analyze the committed version, you'd need to split into separate dependent jobs.
+
+      - name: Run Checkstyle
+        if: success() # Ensure this runs even if the commit step was skipped (no formatting changes)
+        run: |
+          ./mvnw --batch-mode checkstyle:check || echo "Checkstyle found issues." # Continue on error to allow other tools to run, or fail explicitly
+          # Or to fail the build: ./mvnw --batch-mode checkstyle:check
+
+      # For SpotBugs and PMD, generating SARIF files and uploading them to GitHub Code Scanning is a good practice
+      # as `github-pr-review` format is less effective on direct pushes to main.
+
+      - name: Run SpotBugs and Generate SARIF
+        if: success()
+        run: |
+          ./mvnw --batch-mode com.github.spotbugs:spotbugs-maven-plugin:spotbugs -Dspotbugs.effort=Max -Dspotbugs.threshold=High -Dspotbugs.xmlOutput=false -Dspotbugs.sarifOutput=true
+          # Default SARIF output is target/spotbugsSarif.json
+          # The spotbugs-github-action you used before also handles this, but this shows direct Maven usage.
+
+      - name: Upload SpotBugs SARIF Report
+        if: success() # Or always() to upload even if SpotBugs finds issues and fails the previous step (depending on SpotBugs plugin config)
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: target/spotbugsSarif.json # Adjust path if needed
+          category: SpotBugs-${{ matrix.java-version }}
+
+      - name: Run PMD and Generate SARIF
+        if: success()
+        run: |
+          ./mvnw --batch-mode pmd:pmd -Dpmd.rulesetfiles=rulesets/java/quickstart.xml -Dpmd.format=sarif -Dpmd.failurePriority=3
+          # Default SARIF output for PMD is often target/pmd.sarif
+
+      - name: Upload PMD SARIF Report
+        if: success() # Or always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: target/pmd.sarif # Adjust path if needed
+          category: PMD-${{ matrix.java-version }}
+
+      - name: Notify Slack on Failure
+        if: failure() # This condition means any of the above steps in this job (for this matrix leg) failed
+        uses: slackapi/slack-github-action@v1.26.0 # Updated to a newer version
+        with:
+          # SLACK_BOT_TOKEN should be stored in GitHub secrets
+          slack-bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
+          channel-id: 'YOUR_SLACK_CHANNEL_ID' # <-- IMPORTANT: Replace with your actual channel ID
+          payload: | # Using payload for more flexibility
+            {
+              "text": "GitHub Actions Workflow Failed!",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "Workflow *${{ github.workflow }}* failed for commit `${{ github.sha }}` in `${{ github.repository }}`."
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Job:*\n`${{ github.job }}` (JDK ${{ matrix.java-version }})"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Triggered by:*\n`${{ github.actor }}`"
+                    }
+                  ]
+                },
+                {
+                  "type": "actions",
+                  "elements": [
+                    {
+                      "type": "button",
+                      "text": {
+                        "type": "plain_text",
+                        "text": "View Run"
+                      },
+                      "url": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                    }
+                  ]
+                }
+              ]
+            }
+        # env: # Not needed as token is passed via `with`
+          # SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
